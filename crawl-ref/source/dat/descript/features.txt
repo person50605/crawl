@@ -629,7 +629,8 @@ monster while it is aware of you, it has a chance of breaking.
 %%%%
 A broken translucent door
 
-<A broken door>
+A disappointingly poorly-maintained translucent wooden door. It'd take nothing short of
+magic to get this properly closed again.
 %%%%
 A sealed door
 
