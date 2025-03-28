@@ -6,18 +6,14 @@ No puedes lanzar hechizos
 -potion
 
 No puedes beber pociones
-"
 %%%%
 Blind
 
 Tu visión está desmejorada. Todas los hechizos y ataques que tú haces (cual no golpean automáticamente) tienen una mayor probabilidad de fallar.
-//this description is incomplete
 %%%%
 Crippled
 
 Uno o más de tu inteligencia, destreza o fortaleza está cero o menos. Vas a actuar lentamente hasta son más que cero.
-//the last sentence is awkward
-"
 %%%%
 Dig
 
@@ -34,12 +30,10 @@ CUAD DAÑO!
 Rc+
 
 Estás más resistente al frío.
-"//Not sure if this is temporary or even used. If this effect is permanent, replace 'estás' with 'eres'" 
 %%%%
 Relec+
 
 Estás más resistente a la electricidad.
-"//see note at Rc+"
 %%%%
 Resist
 
@@ -48,25 +42,19 @@ Estás más resistente al fuego, al frío, a la electricidad, al veneno y al ác
 Rf+
 
 Estás más resistente al fuego.
-"See Rc+"
 %%%%
 Rf-
 
 Estás menos resistente al fuego.
-"It's probably redundant at this point"
 %%%%
 Rp-
 
 Estás menos resistente al veneno.
-"Hi"
-"
 %%%%
 
 Sleep
 
 Estás dormido y no puedes hacer ninguna acciones.
-//incomplete and awkward
-"
 %%%%
 Slow
 
@@ -74,7 +62,7 @@ Todas tus acciones son 50& más lentas.
 %%%%
 Touch
 
-Tus ataques no hacen nada daño, aunque tienen una posibilidad de confundir a los monstruos que golpean.
+Tus ataques no hacen nada daño, pero tienen una posibilidad de confundir a los monstruos que golpean.
 %%%%
 Weak
 
