@@ -26,25 +26,12 @@ bien en cuerpo a cuerpo, a distancia o mágico. Ciertos tipos de ataque no
 pueden esquivarse, como los encantamientos (que deben ser resistidos) o las
 explosiones.
 %%%%
-Stabbing
-
-Apuñalar es la capacidad que gobierna la facilidad de inflingir una gran
-cantidad de daño cuando se ataca a una criatura indefensa o distraída
-(usualmente con una hoja corta), así como la cantidad adicional de daño
-causada. Algunos dioses pueden desaprobar esta conducta.
-%%%%
 Shields
 
 Un nivel alto de Escudos ayuda a detener ataques cuerpo a cuerpo o con
 proyectiles (mágicos y no mágicos) con el escudo que lleves (que también puede
 ser mágico o divino). Algunos ataques, como los virotes de penetración, no
 pueden ser bloqueados de ningún modo.
-%%%%
-Traps
-
-Un personaje que se haya entrenado con trampas será más observador con respecto
-al entorno y se dará cuenta de las trampas rápidamente, lo que le hará más
-veloz a la hora de desactivarlas.
 %%%%
 Unarmed Combat
 
