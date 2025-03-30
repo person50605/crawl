@@ -1,44 +1,11 @@
 %%%%
-amulet of inaccuracy
-
-Este amuleto hace que su portador sea menos preciso en el combate cuerpo a
-cuerpo, y cuando ataque monstruos mediante ataques a distancia o hechizos.
-%%%%
 animal skin
 
 La piel de un animal.
 %%%%
-apricot
-
-Prunus armeniaca, una suculenta fruta amarillenta o anaranjada.
-%%%%
-arrow
-
-Una flecha, hecha para ser disparada con un arco.
-%%%%
 bardiche
 
 Una larga garrocha con una enorme cuchilla en uno de sus extremos.
-%%%%
-blessed great sword
-
-Una espada con una larguísima y pesada cuchilla y un gran mango. Ha sido
-mejorada con el poder de El Resplandeciente.
-%%%%
-blessed long sword
-
-Una espada con una larga cuchilla. Ha sido mejorada con el poder de El
-Resplandeciente.
-%%%%
-blowgun
-
-Un largo y ligero canuto abierto por ambos extremos. Incapaz de hacer un gran
-daño, su principal uso es el de disparar dardos envenenados a distancia. Es muy
-silencioso.
-%%%%
-bolt
-
-Un virote para ballesta.
 %%%%
 book of annihilations
 
@@ -47,9 +14,6 @@ puede sentir el diáfano impacto de la furia arcana contenida en el libro. Es
 codiciado por los brujos, ya que le permite al dotado e ingenioso ordenar la
 destrucción con un simple chasquido de los dedos. Sin embargo, los magos más
 endebles podrían encontrar su perdición al intentar leer este opus.
-
-ADVERTENCIA: Si fallas al intentar memorizar un hechizo de este libro,
-recibirás un castigo.
 %%%%
 book of cantrips
 
@@ -109,22 +73,9 @@ book of unlife
 Un libro con hechizos mágicos. Esta lleno de símbolos para contactar con los
 muertos.
 %%%%
-book of war chants
-
-Un libro con hechizos útiles para el guerrero. Las versiones contenidas en este
-libro están en forma musical, siguiendo las tradiciones de los escaldos. No
-obstante, desde el punto de vista funcional, son lo mismo que hechizos cuyas
-palabras mágicas son simplemente recitadas.
-%%%%
 book of wizardry
 
 Un libro con hechizos mágicos.
-%%%%
-bow
-
-Una pieza curva de madera con una cuerda atada entre sus extremos, diseñada
-para disparar flechas. Hace bastante daño en combate, y alguien con habilidad
-puede usarlo con gran eficiencia.
 %%%%
 buckler
 
@@ -138,21 +89,13 @@ chain mail
 
 Una malla de anillos metálicos entrelazados.
 %%%%
-cheese
-
-Un trozo de queso.
-%%%%
-choko
-
-Una fruta verde e insípida que crece en una parra.
-%%%%
 cloak
 
 Una capa de tela.
 %%%%
 corpse
 
-Un cadáver. Puedes descuartizarlo para conseguir trozos de carne comestible.
+Un cadáver. Muerto y sin propósito.
 %%%%
 crystal plate armour
 
@@ -190,13 +133,6 @@ Una armadura mágica confeccionada a partir de las escamas de un dragón que
 exhalaba fuego. Proporciona gran protección contra los efectos del fuego, pero
 hace a su usuario más vulnerable a los efectos del frío.
 %%%%
-fire dragon hide
-
-La escamosa piel de un auténtico dragón. Puede usarse para elaborar una
-armadura, pero incluso en su actual estado proporciona gran protección contra
-los efectos del fuego, aunque a costa de hacerte más vulnerable a los efectos
-del frío.
-%%%%
 giant spiked club
 
 Un gigantesco trozo de madera, con púas en uno de sus extremos.
@@ -211,20 +147,9 @@ Una armadura mágica elaborada a partir de las escamas de un dragón dorado. Es
 muy pesado y aparatoso, pero proporciona gran protección contra el fuego, el
 frío, y el veneno.
 %%%%
-golden dragon hide
-
-La gruesa y pesada piel un dragón dorado, cubierta por deslumbrantes escamas
-doradas. Confiere resistencia al fuego, el frío, y el veneno a su usuario, pero
-solamente una pequeña parte de su legendaria protección contra ataques físicos,
-a menos que sea encantado.
-%%%%
 gold piece
 
 Una montón de brillantes monedas de oro.
-%%%%
-grape
-
-Una pequeña fruta.
 %%%%
 great mace
 
@@ -234,7 +159,7 @@ helmet
 
 Una protección metálica para la cabeza.
 %%%%
-ice dragon hide
+ice dragon scales
 
 La escamosa piel de un dragón. Puede usarse para elaborar una armadura, pero
 incluso en su actual estado proporciona gran protección contra los efectos del
@@ -277,22 +202,10 @@ leather armour
 
 Una armadura de cuero endurecido.
 %%%%
-lemon
-
-Una fruta amarillenta.
-%%%%
 longbow
 
 Un largo y fuerte arco hecho de madera de tejo. Es capaz de hacer un daño
 excelente en combate y un arquero experimentado puede usarlo muy eficazmente.
-%%%%
-lychee
-
-Una fruta tropical.
-%%%%
-orange
-
-Una deliciosa y jugosa fruta anaranjada.
 %%%%
 orb of zot
 
@@ -312,46 +225,19 @@ pearl dragon scales
 Una armadura mágica elaborada a partir de las fuertes y flexibles escamas de un
 dragón nacarado. Proporciona protección contra la energía negativa.
 %%%%
-pearl dragon hide
-
-La escamosa piel de un dragón nacarado. Puede usarse para elaborar una armadura
-propiamente dicha, pero incluso en esta basta forma proporciona protección
-contra la energía negativa.
-%%%%
-potion of agility
-
-Una poción mágica que incrementa muy considerablemente la destreza y elusividad
-de quien la beba.
-%%%%
 potion of berserk rage
 
 Una poción que permite entrar en un estado de trance berserk.
-%%%%
-potion of blood
-
-Una poción que contiene la esencia de la vida. Es vital para todos los seres
-vivos, al igual que para algunos no-muertos. Puede proporcionar nutrición para
-los que puedan alimentarse de carne.
 %%%%
 potion of brilliance
 
 Una poción mágica que aumenta en gran cantidad la inteligencia y el mana de
 aquél que la beba.
 %%%%
-potion of confusion
-
-Una poción que confunde tus percepciones y reduce el control de las propias
-acciones.
-%%%%
 potion of cure mutation
 
 Una poción que elimina alguna o todas las mutaciones que puedan estar
 afectándote.
-%%%%
-potion of decay
-
-Un líquido maldito, vil y pútrido que provoca que tu carne se pudra ante tus
-ojos.
 %%%%
 potion of experience
 
@@ -383,11 +269,6 @@ puede haber otros efectos además.
 quarterstaff
 
 Un robusto palo de madera, empleado para el combate.
-%%%%
-rambutan
-
-Una pequeña pero deliciosa fruta. Como llegó a este calabozo se lo pregunta
-todo el mundo.
 %%%%
 ring of dexterity
 
@@ -435,12 +316,6 @@ ring of strength
 Este anillo aumenta o disminuye la fuerza física de su portador, en un grado
 que depende de su poder.
 %%%%
-ring of teleportation
-
-Este anillo ocasionalmente activará su poder para teletranspotar a su portador
-a una posición aleatoria, y puede ser evocado deliberadamente para conseguir el
-mismo efecto.
-%%%%
 ring of wizardry
 
 Este anillo incrementa la habilidad de su portador para usar hechizos mágicos.
@@ -476,18 +351,6 @@ Este pergamino permite al lector teleportarse a una distancia corta, con un
 control preciso. Sea cauteloso, las teleportaciones controladas causan
 contaminaciones con energía mágica.
 %%%%
-scroll of curse armour
-
-Este pergamino impone una maldición a una de las piezas de armadura equipada.
-%%%%
-scroll of curse jewellery
-
-Este pergamino impone una maldición a uno de los amuletos o anillos equipados.
-%%%%
-scroll of curse weapon
-
-Este pergamino impone una maldición a un arma empuñada.
-%%%%
 scroll of fear
 
 Este pergamino causa un gran temor a aquellos que están viendo al lector.
@@ -510,10 +373,6 @@ Este pergamino revela los alrededores del lector.
 Revelará la presencia de puertas secretas, pero no es lo suficientemente
 poderoso para ver más allá de ellas, o en zonas completamente cerradas.
 %%%%
-scroll of remove curse
-
-Leyendo este pergamino remueve maldiciones de objetos que estás usando.
-%%%%
 scroll of teleportation
 
 Cuando leas este pergamino seras transportado a un lugar aleatorio tras esperar
@@ -534,6 +393,154 @@ Un pedazo de tela y cuero para lanzar piedras, que pueden hacer algo de daño al
 impactar. A diferencia de otros lanzadores, llevar un escudo no hace más lenta
 la tasa de disparos.
 %%%%
+staff of conjuration
+
+Este bastón aumenta el poder de los conjuros lanzados por su portador.
+%%%%
+
+
+//Removed items below
+
+
+%%%%
+amulet of inaccuracy
+
+Este amuleto hace que su portador sea menos preciso en el combate cuerpo a
+cuerpo, y cuando ataque monstruos mediante ataques a distancia o hechizos.
+%%%%
+apricot
+
+Prunus armeniaca, una suculenta fruta amarillenta o anaranjada.
+%%%%
+arrow
+
+Una flecha, hecha para ser disparada con un arco.
+%%%%
+blowgun
+
+Un largo y ligero canuto abierto por ambos extremos. Incapaz de hacer un gran
+daño, su principal uso es el de disparar dardos envenenados a distancia. Es muy
+silencioso.
+%%%%
+blessed great sword
+
+Una espada con una larguísima y pesada cuchilla y un gran mango. Ha sido
+mejorada con el poder de El Resplandeciente.
+%%%%
+blessed long sword
+
+Una espada con una larga cuchilla. Ha sido mejorada con el poder de El
+Resplandeciente.
+%%%%
+bolt
+
+Un virote para ballesta.
+%%%%
+book of war chants
+
+Un libro con hechizos útiles para el guerrero. Las versiones contenidas en este
+libro están en forma musical, siguiendo las tradiciones de los escaldos. No
+obstante, desde el punto de vista funcional, son lo mismo que hechizos cuyas
+palabras mágicas son simplemente recitadas.
+%%%%
+bow
+
+Una pieza curva de madera con una cuerda atada entre sus extremos, diseñada
+para disparar flechas. Hace bastante daño en combate, y alguien con habilidad
+puede usarlo con gran eficiencia.
+%%%%
+cheese
+
+Un trozo de queso.
+%%%%
+choko
+
+Una fruta verde e insípida que crece en una parra.
+%%%%
+fire dragon hide
+
+La escamosa piel de un auténtico dragón. Puede usarse para elaborar una
+armadura, pero incluso en su actual estado proporciona gran protección contra
+los efectos del fuego, aunque a costa de hacerte más vulnerable a los efectos
+del frío.
+%%%%
+golden dragon hide
+
+La gruesa y pesada piel un dragón dorado, cubierta por deslumbrantes escamas
+doradas. Confiere resistencia al fuego, el frío, y el veneno a su usuario, pero
+solamente una pequeña parte de su legendaria protección contra ataques físicos,
+a menos que sea encantado.
+%%%%
+grape
+
+Una pequeña fruta.
+%%%%
+lemon
+
+Una fruta amarillenta.
+%%%%
+lychee
+
+Una fruta tropical.
+%%%%
+orange
+
+Una deliciosa y jugosa fruta anaranjada.
+%%%%
+pearl dragon hide
+
+La escamosa piel de un dragón nacarado. Puede usarse para elaborar una armadura
+propiamente dicha, pero incluso en esta basta forma proporciona protección
+contra la energía negativa.
+%%%%
+potion of agility
+
+Una poción mágica que incrementa muy considerablemente la destreza y elusividad
+de quien la beba.
+%%%%
+potion of blood
+
+Una poción que contiene la esencia de la vida. Es vital para todos los seres
+vivos, al igual que para algunos no-muertos. Puede proporcionar nutrición para
+los que puedan alimentarse de carne.
+%%%%
+potion of confusion
+
+Una poción que confunde tus percepciones y reduce el control de las propias
+acciones.
+%%%%
+potion of decay
+
+Un líquido maldito, vil y pútrido que provoca que tu carne se pudra ante tus
+ojos.
+%%%%
+rambutan
+
+Una pequeña pero deliciosa fruta. Como llegó a este calabozo se lo pregunta
+todo el mundo.
+%%%%
+ring of teleportation
+
+Este anillo ocasionalmente activará su poder para teletranspotar a su portador
+a una posición aleatoria, y puede ser evocado deliberadamente para conseguir el
+mismo efecto.
+%%%%
+scroll of curse armour
+
+Este pergamino impone una maldición a una de las piezas de armadura equipada.
+%%%%
+scroll of curse jewellery
+
+Este pergamino impone una maldición a uno de los amuletos o anillos equipados.
+%%%%
+scroll of curse weapon
+
+Este pergamino impone una maldición a un arma empuñada.
+%%%%
+scroll of remove curse
+
+Leyendo este pergamino remueve maldiciones de objetos que estás usando.
+%%%%
 sling bullet
 
 Un proyectil pequeño y pesado diseñado específicamente para hondas y más
@@ -542,10 +549,6 @@ efectivo como munición que las piedras. Pueden tener varios encantamientos.
 snozzcumber
 
 Un vegetal repulsivo en forma de pepino.
-%%%%
-staff of conjuration
-
-Este bastón aumenta el poder de los conjuros lanzados por su portador.
 %%%%
 strawberry
 
