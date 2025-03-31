@@ -9,11 +9,13 @@ No puedes beber pociones
 %%%%
 Blind
 
-Tu visión está desmejorada. Todas los hechizos y ataques que tú haces (cual no golpean automáticamente) tienen una mayor probabilidad de fallar.
+Tu visión está desmejorada. Todas los hechizos y ataques que tú haces (que 
+no golpean automáticamente) tienen una mayor probabilidad de fallar.
 %%%%
 Crippled
 
-Uno o más de tu inteligencia, destreza o fortaleza está cero o menos. Vas a actuar lentamente hasta son más que cero.
+Uno o más de tu inteligencia, destreza o fortaleza está cero o menos. Vas a 
+actuar lentamente hasta son más que cero.
 %%%%
 Dig
 
@@ -37,7 +39,8 @@ Estás más resistente a la electricidad.
 %%%%
 Resist
 
-Estás más resistente al fuego, al frío, a la electricidad, al veneno y al ácido.
+Estás más resistente al fuego, al frío, a la electricidad, al veneno y al 
+ácido.
 %%%%
 Rf+
 
@@ -62,7 +65,8 @@ Todas tus acciones son 50& más lentas.
 %%%%
 Touch
 
-Tus ataques no hacen nada daño, pero tienen una posibilidad de confundir a los monstruos que golpean.
+Tus ataques no hacen nada daño, pero tienen una posibilidad de confundir a 
+los monstruos que golpean.
 %%%%
 Weak
 
