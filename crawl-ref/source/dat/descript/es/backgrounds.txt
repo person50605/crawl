@@ -60,7 +60,8 @@ su Libro de Geomancia.
 Enchanter
 
 Los Encantadores usan hechizos para potenciarse en batalla o bien para
-incapacitar a otros. También comienzan con una daga encantada y dos pociones de invisibilidad.
+incapacitar a otros. También comienzan con una daga encantada y dos pociones de 
+invisibilidad.
 %%%%
 Fire Elementalist
 
@@ -92,8 +93,8 @@ Helar. El resto de hechizos son bastante versátiles.
 Monk
 
 Los Monjes están preparados para enfrentarse a lo que sea en el Calabozo 
-con una túnica, un orbe de luz, una poción de ambrosía divina y una arma sencilla de 
-su elección. Ellos reciben más piedad del primer dios que adoran.
+con una túnica, un orbe de luz, una poción de ambrosía divina y una arma sencilla 
+de su elección. También ellos reciben más piedad del primer dios que adoran.
 %%%%
 Necromancer
 
@@ -128,5 +129,5 @@ Translocaciones Espaciales.
 Hedge Wizard
 
 Los magos comienzan con un Libro de Magia Menor, conteniendo una amplia gama de
-hechizos. Tienen más reservas mágicas que cualquier otro rol.
+hechizos.
 %%%%
