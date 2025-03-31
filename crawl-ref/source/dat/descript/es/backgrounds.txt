@@ -92,8 +92,9 @@ Helar. El resto de hechizos son bastante versátiles.
 %%%%
 Monk
 
-Los Monjes están preparados para enfrentarse a lo que sea en el Calabozo
-simplemente con una túnica y usando su cuerpo.
+Los Monjes están preparados para enfrentarse a lo que sea en el Calabozo 
+con una túnica, un orbe de luz, una poción de ambrosía divina y una arma sencilla de 
+su elección. Ellos reciben más piedad del primer dios que adoran.
 %%%%
 Necromancer
 
