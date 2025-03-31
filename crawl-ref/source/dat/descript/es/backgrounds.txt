@@ -46,6 +46,10 @@ Death Knight
 Los Caballeros de la Muerte son combatientes cuerpo a cuerpo que mandan a los
 no-muertos en el nombre de Yredelemnul el Oscuro.
 %%%%
+Delver
+
+Los Espeleólogos empiezan su misón cinco niveles debajo del superficie. Tienen artílcos mágicos y poderosos para ayudarlos a sobrevivir el viaje peligroso al superficie.
+
 Earth Elementalist
 
 Los Elementalistas de la Tierra conocen el hechizo del Golpe de Arena, y tienen
