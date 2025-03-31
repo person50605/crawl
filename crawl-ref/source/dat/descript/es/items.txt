@@ -348,8 +348,11 @@ de su memoria para recapturar la energía mágica asociada a él.
 scroll of blinking
 
 Este pergamino permite al lector teleportarse a una distancia corta, con un
-control preciso. Sea cauteloso, las teleportaciones controladas causan
-contaminaciones con energía mágica.
+control preciso.
+%%%%
+scroll of butterflies
+
+Este pergamino rodea al lector con mariposas bonitas, empujando a otras criaturas cercanas.
 %%%%
 scroll of fear
 
@@ -362,16 +365,16 @@ Este pergamino rodea al lector con una densa nube de niebla.
 scroll of identify
 
 Este útil pergamino mágico permite determinar las propiedades mágicas de
-cualquier objeto, y ocasionalmente permitirá múltiples identificaciones.
+cualquier objeto.
+%%%%
+scroll of noise
 
-Si es usado en un mazo de cartas, este pergamino revelará la carta superior.
+Un pergamino de broma que emite un rudio fuerte.
 %%%%
 scroll of revelation
 
-Este pergamino revela los alrededores del lector.
-
-Revelará la presencia de puertas secretas, pero no es lo suficientemente
-poderoso para ver más allá de ellas, o en zonas completamente cerradas.
+Este pergamino revela los alrededores del lector y mapea el piso que el 
+lector está en.
 %%%%
 scroll of teleportation
 
