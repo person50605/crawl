@@ -1,15 +1,19 @@
 %%%%
 Berserk
 
-Cuando atacas a enemigos cuerpo a cuerpo, a veces entras en un estado de rabia berserk. Cada nivel de esta mutación aumenta la probabilidad de entrando un estado de rabia berserk.
+Cuando atacas a enemigos cuerpo a cuerpo, a veces entras en un estado de rabia 
+berserk. Cada nivel de esta mutación aumenta la probabilidad de entrando un estado 
+de rabia berserk.
 %%%%
 Cold Resistance
 
-Tienes resistencia al frío. Cada nivel de esta mutación reduce el daño que recibes del frío.
+Tienes resistencia al frío. Cada nivel de esta mutación reduce el daño que recibes 
+del frío.
 %%%%
 Fire Resistance
 
-Tienes resistencia al fuego. Cada nivel de esta mutación reduce el daño que recibes del fuego.
+Tienes resistencia al fuego. Cada nivel de esta mutación reduce el daño que recibes 
+del fuego.
 %%%%
 Inability to train armour
 
