@@ -399,7 +399,7 @@ Este bastón aumenta el poder de los conjuros lanzados por su portador.
 %%%%
 
 
-//Removed items below
+#Removed items below
 
 
 %%%%
