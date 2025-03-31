@@ -48,7 +48,9 @@ no-muertos en el nombre de Yredelemnul el Oscuro.
 %%%%
 Delver
 
-Los Espeleólogos empiezan su misón cinco niveles debajo del superficie. Tienen artílcos mágicos y poderosos para ayudarlos a sobrevivir el viaje peligroso al superficie.
+Los Espeleólogos empiezan su misón cinco niveles debajo del superficie. Tienen 
+artílcos mágicos y poderosos para ayudarlos a sobrevivir el viaje peligroso al 
+superficie.
 %%%%
 Earth Elementalist
 
