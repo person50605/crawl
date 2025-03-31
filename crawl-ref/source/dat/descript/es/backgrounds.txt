@@ -38,8 +38,7 @@ los constantes cambios de humor del dios.
 %%%%
 Conjurer
 
-Los Conjuradores afrontan los problemas con hechizos destructivos de su Libro
-de los Conjuros
+Los Conjuradores afrontan los problemas con hechizos destructivos.
 %%%%
 Death Knight
 
@@ -61,13 +60,13 @@ su Libro de Geomancia.
 Enchanter
 
 Los Encantadores usan hechizos para potenciarse en batalla o bien para
-incapacitar a otros. También comienzan con buenos dardos.
+incapacitar a otros. También comienzan con una daga encantada y dos pociones de invisibilidad.
 %%%%
 Fire Elementalist
 
 Los Elementalistas de Fuego comienzan con el Libro de las Llamas y conocen el
 hechizo Lengua de Fuego. Los otros hechizos en su libro se enfocan en
-destrucción también.
+destrucción ardiente y explosiva también.
 %%%%
 Gladiator
 
