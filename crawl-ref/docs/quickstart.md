@@ -30,11 +30,7 @@ glance, and control is exercised largely through one-keystroke commands.
 STARTING OUT
 ------------
 
-After starting the program you will be greeted with a message asking for your
-name. Don't spend too much time over this, as your first character will **not**
-last very long (sorry, but it's true).
-
-Next you are given menus of species and backgrounds from which to choose.
+After starting the program you will be greeted with a menu of species and backgrounds from which to choose.
 A mountain dwarf, minotaur or troll Fighter is a good bet. Elves are quite
 fragile, humans are pretty average at everything, and the weirder species are
 mostly too tricky for beginning players. Finally, you may be given a choice of
@@ -43,13 +39,13 @@ weapons. I suggest an axe (axes are fun).
 Now you are in the game. The game screen has three parts:
 
  - the Map takes up the upper left part of the screen. In its very centre is
-   the `@` sign (or player doll tile) which represents You. The bright parts of
+   the `@` sign (or player doll tile), which represents You. The bright parts of
    the Map are the parts you can see, while places which you have visited 
    before but cannot currently see are darkened.
  - the Message box is the large part of the screen below the map. It describes
    events as they happen and asks you questions from time to time.
  - the Stats area (to the right of the Map) contains various indicators of
-   your health and abilities.
+   your health and statuses.
 
 EXPLORING
 ---------
@@ -85,11 +81,11 @@ There are several different types of items:
    command.
  - **Armour** (`[`). Wear it, or take it off, with the `W` (Wear) command.
    Heavier armours give more protection, but may hamper your ability to dodge,
-   cast spells, or fire ranged weapons.
+   cast spells, and fire ranged weapons.
  - **Ammunition** (which has the `(` sign). Throw it with `f` and `F` (fire).
  - **Wands** (`/`), **Scrolls** (`?`) and **Potions** (`!`) can be very
    valuable, but have limited uses (scrolls and potions can only be used once
-   each, wands contain only a certain number of charges). Wands are e`V`oked,
+   each, and wands contain only a certain number of charges). Wands are e`V`oked,
    scrolls are `r`ead and potions are `q`uaffed. Unfortunately, you won't at
    first know what a scroll or potion does; it will only be described by its
    physical appearance. But once you have used, for example, a potion of curing,
@@ -121,7 +117,7 @@ To survive, you will need to develop a few basic tactics:
    corridor so that they must fight you one-on-one.
  - Consumable items like scrolls and potions won't do you any good when you're
    dead, and most are more effective when used at the start of a tough fight
-   than when you're near death. Try identifying some ahead of time by 'wasting'
+   than when you're near death. Try identifying some ahead of time by using a scroll of identify on your unknown items or by 'wasting'
    one from a stack while in a safe spot.
  - Remember to use projectiles before engaging monsters in close combat.
  - Learn when to run away from things you can't handle - this is important!
