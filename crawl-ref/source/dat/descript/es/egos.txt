@@ -1,0 +1,46 @@
+%%%%
+acid (acid) weapon ego
+
+El salpica ácido en los quein golpea (2d4 daño, Corrosión).
+%%%%
+chaos (chaos) weapon ego
+
+Cada golpe de esta arma hace un effeco aleatorio.
+%%%%
+entangling (entangle) weapon ego
+
+A veces, esta arma enreda a los quien golpea. (50% probabilidad, 2-4 daño).
+%%%%
+heavy (heavy) weapon ego
+
+Hace mucho más daño, pero sus ataques son más lentos.
+%%%%
+pain (pain) weapon ego
+
+Inflige más daño a crituras viviendo en proporción a tu Necromancia
+skill.{{
+    if you.god() == "Trog" then
+        return " Trog te preventa de utilizando este effecto.";
+    end
+}}{{
+    if you.is_useless_skill("necromancy") then
+        return "Tu inacapacidad de estudiar Necromancia te preventa de utilizando todo del poder de esta arma.";
+    end
+}}
+%%%%
+protection (protect) weapon ego
+
+Te da protección temporal después de ataca (+7 AC).
+%%%%
+speed (speed) weapon ego
+
+Sus ataques son más rapidos.
+%%%%
+venom (venom) weapon ego
+
+La arma envenena a los quien golpea.
+%%%%
+harm (Harm) armour ego
+
+Aumenta el daño que haces y recibes.
+%%%%
