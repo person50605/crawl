@@ -1,0 +1,49 @@
+%%%%
+Alive status
+
+Eres lleno de sangre, y regeneras la salud rápidamente.
+%%%%
+-Cast status
+
+No puedes lanzar hechizos.
+%%%%
+Cloud status
+
+Estás dentro de una nube.
+%%%%
+Dig status
+
+Estás cavando.
+%%%%
+Dim status
+
+El poder de tus hechizos es reducido por 50%.
+%%%%
+Fast status
+
+Todas tus acciones son 50% más rapidas.
+%%%%
+-Potion status
+
+No puedes beber pociones.
+%%%%
+rF0
+
+La ira de Ignis te previene de resistir el fuego.
+%%%%
+Sick status
+
+Estás enferma, y tu salud no regenerará.
+%%%%
+Slow status
+
+Todas tus acciones son 50% más lentas.
+%%%%
+Weak status
+
+Tus ataques cuerpo a cuerpo hacen 25% menos daño.
+%%%%
+Quad status
+
+¡CUAD DAÑO!
+%%%%
