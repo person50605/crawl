@@ -24,7 +24,7 @@ skill.{{
     end
 }}{{
     if you.is_useless_skill("necromancy") then
-        return "Tu inacapacidad de estudiar Necromancia te preventa de utilizando todo del poder de esta arma.";
+        return "Tu inacapacidad de estudiar Necromancia te preventa de utilizar todo del poder de esta arma.";
     end
 }}
 %%%%
