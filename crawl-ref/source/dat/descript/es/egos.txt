@@ -20,7 +20,7 @@ pain (pain) weapon ego
 Inflige más daño a crituras viviendo en proporción a tu Necromancia
 skill.{{
     if you.god() == "Trog" then
-        return " Trog te preventa de utilizando este effecto.";
+        return " Trog te preventa de utilizar este effecto.";
     end
 }}{{
     if you.is_useless_skill("necromancy") then
