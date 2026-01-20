@@ -1302,7 +1302,7 @@ void bolt::do_fire()
         // If requested to stop before hitting allies, do so now.
         const actor* act_at = actor_at(pos());
         if (act_at && stop_at_allies && mons_atts_aligned(attitude, act_at->temp_attitude())
-            && can_affect_actor(act_at)
+            && can_affect_actor(act_at) && !aimed_at_feet
             && !(act_at->is_player() && ignores_player() || ignores_monster(act_at->as_monster())))
         {
             ray.regress();
@@ -2959,18 +2959,18 @@ bool bolt::can_burn_trees() const
 
 bool bolt::can_affect_wall(const coord_def& p, bool map_knowledge) const
 {
-    dungeon_feature_type wall = env.grid(p);
-
-    // digging might affect unseen squares, as far as the player knows
-    if (map_knowledge && flavour == BEAM_DIGGING &&
-                                        !env.map_knowledge(pos()).seen())
-    {
-        return true;
-    }
+    dungeon_feature_type wall = map_knowledge ? env.map_knowledge(p).feat()
+                                              : env.grid(p);
 
     // digging
-    if (flavour == BEAM_DIGGING && feat_is_diggable(wall))
-        return true;
+    if (flavour == BEAM_DIGGING)
+    {
+        if (feat_is_diggable(wall))
+            return true;
+        // digging might affect unseen squares, as far as the player knows
+        if (wall == DNGN_UNSEEN)
+            return true;
+    }
 
     if (can_burn_trees())
         return feat_is_flammable(wall);
@@ -4028,7 +4028,7 @@ void bolt::affect_player_enchantment(bool resistible)
 
     case BEAM_ILL_OMEN:
         obvious_effect = true;
-        if (!you.doom(random_range(20, 35)))
+        if (!you.doom(random_range(16, 30) + ench_power / 20))
             mpr("You feel an ill-omen....");
         break;
 
@@ -4466,7 +4466,12 @@ void bolt::affect_player()
             foes_hurt++;
     }
 
+    extra_range_used += range_used_on_hit();
+
     internal_ouch(final_dam);
+
+    if (!you.alive())
+        return;
 
     // Acid. (Apply this afterward, to avoid bad message ordering.)
     if (origin_spell == SPELL_CORROSIVE_BOLT && !one_chance_in(4))
@@ -4492,8 +4497,6 @@ void bolt::affect_player()
         mprf("%s!", effect.desc);
         effect.effect(you, *this);
     }
-
-    extra_range_used += range_used_on_hit();
 
     knockback_actor(&you, final_dam);
     pull_actor(&you, final_dam);

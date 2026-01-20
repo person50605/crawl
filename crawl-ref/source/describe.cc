@@ -292,7 +292,7 @@ const char* jewellery_base_ability_string(int subtype)
     case AMU_FAITH:
     case AMU_REFLECTION:
     case AMU_WILDSHAPE:
-    case AMU_ALCHEMY:
+    case AMU_CHEMISTRY:
     case AMU_DISSIPATION:
         return jewellery_effect_name(subtype, true);
     }
@@ -711,9 +711,9 @@ static const char* _jewellery_base_ability_description(int subtype)
         return "It reflects blocked missile attacks.";
     case AMU_WILDSHAPE:
         return "It improves your skill with shapeshifting (+5).";
-    case AMU_ALCHEMY:
-        return "It enhances your alchemy spells and restores some MP when you "
-               "drink potions.";
+    case AMU_CHEMISTRY:
+        return "It restores some MP whenever you drink a potion and also enhances "
+               "your alchemy spells.";
     case AMU_DISSIPATION:
         return "It reduces the duration of hostile enchantments and decays "
                "magical contamination more quickly.";
@@ -1238,7 +1238,13 @@ static int _item_training_target(const item_def &item)
     if (item.base_type == OBJ_MISSILES && is_throwable(&you, item))
         return (((10 + throw_dam / 2) - FASTEST_PLAYER_THROWING_SPEED) * 2) * 10;
     if (item.base_type == OBJ_TALISMANS)
-        return get_form(form_for_talisman(item))->min_skill * 10;
+    {
+        // Train to minimum level if below it, else maximum level.
+        int current_skill = get_form(form_for_talisman(item))->get_level(10);
+        int min_skill = get_form(form_for_talisman(item))->min_skill * 10;
+        int max_skill = get_form(form_for_talisman(item))->max_skill * 10;
+        return current_skill < min_skill ? min_skill : max_skill;
+    }
     if (item.base_type == OBJ_BAUBLES)
         return get_form(transformation::flux)->min_skill * 10;
     return 0;
@@ -5164,7 +5170,7 @@ static string _brand_damage_string(const monster_info &mi, brand_type brand,
         case SPWPN_FREEZING:
         case SPWPN_DRAINING:
         case SPWPN_CONCUSSION:
-            brand_dam = dam / 2;
+            brand_dam = dam * 3 / 4;
             break;
         case SPWPN_ELECTROCUTION:
             brand_dam = 20;
@@ -7384,8 +7390,8 @@ static void _maybe_note_airstrike_damage(vector<vector<string>>& items,
     dice_def data[3][2];
     for (int i = 0; i < 3; ++i)
     {
-        data[i][0] = player_airstrike_melee_damage(skill[i], 0);
-        data[i][1] = player_airstrike_melee_damage(skill[i], 7);
+        data[i][0] = player_airstrike_melee_damage(0, skill[i]);
+        data[i][1] = player_airstrike_melee_damage(7, skill[i]);
     }
 
     vector<string> labels;
@@ -7458,11 +7464,6 @@ static void _desc_form_val(TablePrinter& pr, string label, int val)
     pr.AddCell(label, make_stringf("%+d", val).c_str(), val < 0 ? RED : LIGHTGREY);
 }
 
-static int _get_scroll_skill_boost(int skill)
-{
-    return 5 + skill * 5;
-}
-
 static string _describe_talisman_form(transformation form_type)
 {
     const Form* form = get_form(form_type);
@@ -7490,7 +7491,6 @@ static string _describe_talisman_form(transformation form_type)
     _maybe_populate_form_table(items, bind(&Form::slay_bonus, form, false, placeholders::_1), "Slay", skill);
     _maybe_populate_form_table(items, bind(&Form::regen_bonus, form, placeholders::_1), "Regen", skill, 0, false, true, 100, 2);
     _maybe_populate_form_table(items, bind(&Form::mp_regen_bonus, form, placeholders::_1), "MP Regen", skill, 0, false, true, 100, 2);
-    _maybe_populate_form_table(items, bind(&Form::get_vamp_chance, form, placeholders::_1), "Vamp Chance (while <50% HP)", skill, 0, true, false);
     _maybe_populate_form_table(items, bind(&Form::get_web_chance, form, placeholders::_1), "Ensnare Chance", skill, 0, true, false);
     _maybe_note_armour_modifier(items, *form, skill);
 
@@ -7498,7 +7498,15 @@ static string _describe_talisman_form(transformation form_type)
                           form_type == transformation::dragon && !species::is_draconian(you.species) ? " (x2)" : "");
 
     if (form_type == transformation::maw)
+    {
         _maybe_populate_form_table(items, bind(&Form::get_aux_damage, form, false, placeholders::_1), "Bite Dmg", skill, 0, false, false);
+        _maybe_populate_form_table(items, bind(&Form::get_effect_size, form, placeholders::_1), "Devour Regen", skill, 0, false, true, 100, 2);
+    }
+    if (form_type == transformation::blade)
+    {
+        _maybe_populate_form_table(items, bind(&Form::get_aux_damage, form, false, placeholders::_1), "Blade Dmg", skill, 0, false, false);
+        _maybe_populate_form_table(items, bind(&Form::get_effect_size, form, placeholders::_1), "Parry SH", skill, 0, false, false);
+    }
     if (form_type == transformation::hive)
         _maybe_populate_form_table(items, bind(&Form::get_effect_size, form, placeholders::_1), "# of Bees", skill, 0, false, false, 10, 1);
     if (form_type == transformation::sphinx)
@@ -7510,13 +7518,18 @@ static string _describe_talisman_form(transformation form_type)
         _maybe_populate_form_table(items, bind(&Form::get_howl_power, form, placeholders::_1), "Howl Power", skill, 0, false, false);
     }
     if (form_type == transformation::walking_scroll)
-        _maybe_populate_form_table(items, _get_scroll_skill_boost, "Spell Skill Boost", skill, 0, false, true, 10, 1);
+        _maybe_populate_form_table(items, bind(walking_scroll_skill_bonus, 10, placeholders::_1), "Spell Skill Boost", skill, 0, false, true, 10, 1);
     if (form_type == transformation::fortress_crab)
         _maybe_populate_form_table(items, bind(&Form::get_effect_size, form, placeholders::_1), "Rust Breath Size", skill, 0, false, false);
     if (form_type == transformation::medusa)
     {
         _maybe_populate_form_table(items, bind(&Form::get_effect_size, form, placeholders::_1), "Tendril targets", skill, 0, false, false, 10, 1);
         _maybe_populate_form_table(items, bind(&Form::get_effect_chance, form, placeholders::_1), "Petrify chance", skill, 0, true, false);
+    }
+    if (form_type == transformation::vampire)
+    {
+        _maybe_populate_form_table(items, bind(&Form::get_effect_size, form, placeholders::_1), "Bat Swarm Recharge", skill, 0, true, false);
+        _maybe_populate_form_table(items, bind(&Form::get_effect_chance, form, placeholders::_1), "Daze Power", skill, 0, false, false);
     }
 
     vector<int> column_width;
@@ -7591,7 +7604,11 @@ static string _describe_talisman_form(transformation form_type)
         pr.AddCell("EV", "-20%", RED);
     }
     else if (form_type == transformation::maw)
-        pr.AddCell("Bite chance", "75%");
+        pr.AddCell("Bite speed", "15 aut");
+    else if (form_type == transformation::eel_hands)
+        pr.AddCell("Elec chance", "50%");
+    else if (form_type == transformation::blade)
+        pr.AddCell("Aux chance", "60% (x2)");
     else if (form_type == transformation::death)
         pr.AddCell("Will", "+");
     else if (form_type == transformation::vampire)
@@ -7617,6 +7634,9 @@ static string _describe_talisman_form(transformation form_type)
         pr.AddCell("Melee damage", "-50%", RED);
     }
 
+    if (form_type == transformation::vampire || form_type == transformation::sphinx)
+        pr.AddCell("SInv", "+");
+
     // Don't output extra blank lines if there's no content.
     if (pr.NumCells() > 0)
     {
@@ -7639,7 +7659,7 @@ static string _describe_talisman_form(transformation form_type)
         changes.emplace_back("Blood");
     if (form->has_bones == FC_FORBID)
         changes.emplace_back("Bones");
-    if (form_type == transformation::blade_hands)
+    if (form_type == transformation::eel_hands)
         changes.emplace_back("Hands");
 
     if (!changes.empty())

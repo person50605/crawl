@@ -1191,6 +1191,8 @@ static int _player_bonus_regen()
             && armour_type_prop(item->sub_type, ARMF_REGENERATION))
         {
             rr += REGEN_PIP;
+            if (you.form == transformation::fortress_crab)
+                rr += REGEN_PIP;
         }
         if (item->is_type(OBJ_JEWELLERY, AMU_REGENERATION))
             rr += REGEN_PIP;
@@ -1208,12 +1210,18 @@ static int _player_bonus_regen()
     if (you.duration[DUR_POWERED_BY_DEATH])
         rr += you.props[POWERED_BY_DEATH_KEY].get_int() * 100;
 
+    if (you.duration[DUR_ENGORGED])
+        rr += get_form()->get_effect_size();
+
     // Rampage healing grants a variable regen boost while active.
     if (you.get_mutation_level(MUT_ROLLPAGE) > 1
         && you.duration[DUR_RAMPAGE_HEAL])
     {
         rr += you.props[RAMPAGE_HEAL_KEY].get_int() * 65;
     }
+
+    if (you.duration[DUR_OOZE_REGEN])
+        rr += you.hp_max * 4;
 
     return rr;
 }
@@ -1306,6 +1314,9 @@ int player_mp_regen()
     if (you.duration[DUR_RAMPAGE_HEAL])
         regen_amount += you.props[RAMPAGE_HEAL_KEY].get_int() * 33;
 
+    if (you.duration[DUR_OOZE_REGEN])
+        regen_amount += you.max_magic_points * 4;
+
     if (have_passive(passive_t::jelly_regen))
     {
         // We use piety rank to avoid leaking piety info to the player.
@@ -1367,16 +1378,11 @@ int player_res_fire(bool allow_random, bool temp, bool items)
         // Staves
         rf += you.wearing(OBJ_STAVES, STAFF_FIRE);
 
-        // body armour:
-        const item_def *body_armour = you.body_armour();
-        if (body_armour)
-            rf += armour_type_prop(body_armour->sub_type, ARMF_RES_FIRE);
-
         // ego armours
         rf += you.wearing_ego(OBJ_ARMOUR, SPARM_FIRE_RESISTANCE);
         rf += you.wearing_ego(OBJ_ARMOUR, SPARM_RESISTANCE);
 
-        // randart weapons:
+        // artefacts and dragon armour
         rf += you.scan_artefacts(ARTP_FIRE);
 
         // dragonskin cloak: 0.5 to draconic resistances
@@ -1467,16 +1473,11 @@ int player_res_cold(bool allow_random, bool temp, bool items)
         // Staves
         rc += you.wearing(OBJ_STAVES, STAFF_COLD);
 
-        // body armour:
-        const item_def *body_armour = you.body_armour();
-        if (body_armour)
-            rc += armour_type_prop(body_armour->sub_type, ARMF_RES_COLD);
-
         // ego armours
         rc += you.wearing_ego(OBJ_ARMOUR, SPARM_COLD_RESISTANCE);
         rc += you.wearing_ego(OBJ_ARMOUR, SPARM_RESISTANCE);
 
-        // randart weapons:
+        // artefacts and dragon armour
         rc += you.scan_artefacts(ARTP_COLD);
 
         // dragonskin cloak: 0.5 to draconic resistances
@@ -1546,12 +1547,7 @@ int player_res_electricity(bool allow_random, bool temp, bool items)
         // staff
         re += you.wearing(OBJ_STAVES, STAFF_AIR);
 
-        // body armour:
-        const item_def *body_armour = you.body_armour();
-        if (body_armour)
-            re += armour_type_prop(body_armour->sub_type, ARMF_RES_ELEC);
-
-        // randart weapons:
+        // artefacts and dragon armour
         re += you.scan_artefacts(ARTP_ELECTRICITY);
 
         // dragonskin cloak: 0.5 to draconic resistances
@@ -1619,12 +1615,7 @@ int player_res_poison(bool allow_random, bool temp, bool items, bool forms)
         // ego armour:
         rp += you.wearing_ego(OBJ_ARMOUR, SPARM_POISON_RESISTANCE);
 
-        // body armour:
-        const item_def *body_armour = you.body_armour();
-        if (body_armour)
-            rp += armour_type_prop(body_armour->sub_type, ARMF_RES_POISON);
-
-        // rPois+ artefacts
+        // rPois+ artefacts and dragon armour
         rp += you.scan_artefacts(ARTP_POISON);
 
         // dragonskin cloak: 0.5 to draconic resistances
@@ -1787,7 +1778,7 @@ int player_spec_alchemy()
     if (you.wearing(OBJ_STAVES, STAFF_ALCHEMY))
         sp += 1 + you.wearing_ego(OBJ_ARMOUR, SPARM_ATTUNEMENT);
 
-    sp += you.wearing_jewellery(AMU_ALCHEMY);
+    sp += you.wearing_jewellery(AMU_CHEMISTRY);
 
     sp += you.scan_artefacts(ARTP_ENHANCE_ALCHEMY);
 
@@ -1823,15 +1814,10 @@ int player_prot_life(bool allow_random, bool temp, bool items)
         // rings
         pl += you.wearing_jewellery(RING_POSITIVE_ENERGY);
 
-        // armour (checks body armour only)
+        // ego armour
         pl += you.wearing_ego(OBJ_ARMOUR, SPARM_POSITIVE_ENERGY);
 
-        // pearl dragon counts
-        const item_def *body_armour = you.body_armour();
-        if (body_armour)
-            pl += armour_type_prop(body_armour->sub_type, ARMF_RES_NEG);
-
-        // randart wpns
+        // randarts and dragon armour
         pl += you.scan_artefacts(ARTP_NEGATIVE_ENERGY);
 
         // dragonskin cloak: 0.5 to draconic resistances
@@ -2002,6 +1988,9 @@ int player_parrying()
     }
 
     sh += 10 * you.wearing_ego(OBJ_WEAPONS, SPWPN_REBUKE);
+
+    if (you.form == transformation::blade)
+        sh += get_form()->get_effect_size() + you.slaying();
 
     return sh;
 }
@@ -3363,9 +3352,6 @@ int player_stealth()
         const int evp = player_armour_stealth_penalty();
         const int penalty = evp * evp * 2 / 3;
         stealth -= penalty;
-
-        const int pips = armour_type_prop(arm->sub_type, ARMF_STEALTH);
-        stealth += pips * STEALTH_PIP;
     }
 
     stealth += STEALTH_PIP * you.scan_artefacts(ARTP_STEALTH);
@@ -3945,7 +3931,7 @@ void drain_mp(int mp_loss, bool ignore_resistance)
 void pay_hp(int cost)
 {
     you.hp -= cost;
-    ASSERT(you.hp);
+    ASSERT(you.hp > 0);
 }
 
 void pay_mp(int cost)
@@ -6254,7 +6240,7 @@ int player::skill(skill_type sk, int scale, bool real, bool temp) const
     if (you.form == transformation::walking_scroll
         && sk >= SK_FIRST_MAGIC_SCHOOL && sk <= SK_LAST_MAGIC)
     {
-        level += (10 + get_form()->get_level(10)) * scale / 20;
+        level += walking_scroll_skill_bonus(scale);
     }
 
     if (temp && skill_has_dilettante_penalty(sk))
@@ -7091,13 +7077,8 @@ int player_willpower(bool temp)
 
     int rm = you.experience_level * species::get_wl_modifier(you.species);
 
-    // randarts
+    // randarts and dragon armour
     rm += WL_PIP * you.scan_artefacts(ARTP_WILLPOWER);
-
-    // body armour
-    const item_def *body_armour = you.body_armour();
-    if (body_armour)
-        rm += armour_type_prop(body_armour->sub_type, ARMF_WILLPOWER) * WL_PIP;
 
     // ego armours
     rm += WL_PIP * you.wearing_ego(OBJ_ARMOUR, SPARM_WILLPOWER);
@@ -7809,8 +7790,12 @@ bool player::innate_sinv() const
     if (get_mutation_level(MUT_EYEBALLS) == 3)
         return true;
 
-    if (form == transformation::jelly)
+    if (form == transformation::jelly
+        || form == transformation::sphinx
+        || form == transformation::vampire)
+    {
         return true;
+    }
 
     if (have_passive(passive_t::sinv))
         return true;
