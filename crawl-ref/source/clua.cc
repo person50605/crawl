@@ -564,7 +564,15 @@ int CLua::pcall(int argc, int retc)
         msgh = 1;
     }
 
-    return lua_pcall(_state, argc, retc, msgh);
+    const int retval = lua_pcall(_state, argc, retc, msgh);
+
+    // lua_pcall doesn't remove the error handler, so we have to do it. TODO:
+    // Maybe just push the handler once and leave it at index 1? It would be
+    // a slight performance gain.
+    if (!managed_vm)
+        lua_remove(_state, 1);
+
+    return retval;
 }
 
 bool CLua::calltopfn(const char *params, va_list args, int retc,
@@ -857,6 +865,7 @@ void CLua::init_libraries()
     cluaopen_travel(_state);
     cluaopen_view(_state);
     cluaopen_spells(_state);
+    cluaopen_autofight(_state);
 
     cluaopen_globals(_state);
 

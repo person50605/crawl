@@ -240,10 +240,9 @@ function vault_species_skeletons(e, category)
 -- post-rotting. Orcs are included to cover Beogh's popularity in the Dungeon.
 -- Coglins have their exoskeletons stolen. Species that only show up
 -- in extended are counted as the rarest type.
-  local s1 = {"goblin", "gnoll", "elf", "kobold", "troll", "orc"}
+  local s1 = {"goblin", "gnoll", "elf", "kobold", "troll", "orc", "centaur"}
   local s2 = {"draconian", "naga", "merfolk", "minotaur", "spriggan", "tengu"}
-  local s3 = {"armataur", "barachi", "demigod", "dwarf",
-              "demonspawn", "felid", "oni"}
+  local s3 = {"barachi", "demigod", "dwarf", "demonspawn", "felid", "oni"}
   local output = "human skeleton"
   if category == "early" or category == "dungeon" or category == "all" then
     output = output .. " / " .. table.concat(s1, " skeleton / ")
@@ -323,8 +322,11 @@ function decorative_floor (e, glyph, type)
                               "dngn_dark_flower_pot_broken"},
     ["orcish standard"] = {"lightcyan", "dngn_ensign_beogh"},
     ["infernal standard"] = {"red", "dngn_ensign_gehenna"},
+    ["caliginous standard"] = {"magenta", "dngn_ensign_dark"},
     ["fur brush"] = {"brown", "dngn_yak_fur"},
     ["set of bottled spirits"] = {"lightgreen", "dngn_bottled_spirits"},
+    ["djembe set"] = {"brown", "dngn_djembe"},
+    ["skull pike"] = {"lightgrey", "dngn_skull_pike"},
     ["mop and bucket"] = {"lightblue", "dngn_mop"},
     ["bloodied mop and bucket"] = {"lightred", "dngn_mop_bloody"},
     ["weapon-inlaid floor"] = {"lightgrey", "floor_blade"}

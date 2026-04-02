@@ -77,6 +77,7 @@ void remove_bound_soul_companion()
             mons = &entry.second.mons.mons;
         if (mons->type == MONS_BOUND_SOUL)
         {
+            mprf("%s is freed.", mons->name(DESC_THE, true).c_str());
             remove_companion(mons);
             return;
         }
@@ -616,7 +617,7 @@ void win_apostle_challenge(monster& apostle)
     }
 
     apostle.hit_points = apostle.max_hit_points;
-    apostle.timeout_enchantments();
+    apostle.timeout_enchantments(10000, true);
     apostle.attitude = ATT_GOOD_NEUTRAL;
     mons_att_changed(&apostle);
     apostle.stop_constricting_all();
@@ -661,6 +662,17 @@ void win_apostle_challenge(monster& apostle)
             simple_monster_message(**mi, " is recalled by Beogh.");
             monster_die(**mi, KILL_RESET, -1, true);
         }
+    }
+
+    // In the rare case the apostle has died over lava, move it somewhere safe.
+    // XXX: This is technically not guaranteed to find anywhere to put it, in
+    //      which case we leave it where it is. This should be almost impossible
+    //      to encounter in practice.
+    if (!monster_habitable_grid(&apostle, apostle.pos()))
+    {
+        coord_def spot;
+        if (find_habitable_spot_near(apostle.pos(), MONS_ORC_APOSTLE, LOS_RADIUS, spot))
+            apostle.move_to(spot, MV_INTERNAL);
     }
 }
 

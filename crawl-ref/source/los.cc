@@ -820,14 +820,11 @@ void losight(los_grid& sh, const coord_def& center,
     sh(o) = true;
 }
 
-opacity_type mons_opacity(const monster* mon, los_type how)
+opacity_type mons_opacity(monster_type mc, los_type how)
 {
     // no regard for LOS_ARENA
-    if (mons_species(mon->type) == MONS_BUSH
-        && how != LOS_SOLID)
-    {
+    if (mons_species(mc) == MONS_BUSH && how != LOS_SOLID)
         return OPC_HALF;
-    }
 
     return OPC_CLEAR;
 }
@@ -845,7 +842,7 @@ static void _handle_los_change()
 static bool _mons_block_sight(const monster* mons)
 {
     // must be the least permissive one
-    return mons_opacity(mons, LOS_SOLID_SEE) != OPC_CLEAR;
+    return mons_opacity(mons->type, LOS_SOLID_SEE) != OPC_CLEAR;
 }
 
 void los_actor_moved(const actor* act, const coord_def& oldpos)

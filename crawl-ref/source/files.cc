@@ -1633,9 +1633,9 @@ void update_portal_entrances()
     // add any portals not currently registered
     for (rectangle_iterator ri(0); ri; ++ri)
     {
-        dungeon_feature_type feat = env.grid(*ri);
+        dungeon_feature_type feat = feat_at_no_mimic(*ri);
         // excludes pan, hell, abyss.
-        if (feat_is_portal_entrance(feat) && !feature_mimic_at(*ri))
+        if (feat_is_portal_entrance(feat))
         {
             level_id whither = stair_destination(feat, "", false);
             if (whither.branch == BRANCH_ZIGGURAT // not (quite) pregenerated
@@ -2457,8 +2457,7 @@ bool load_level(dungeon_feature_type stair_taken, load_mode_type load_mode,
                 && feat_stair_direction(feat) != CMD_NO_CMD
                 && feat_stair_direction(stair_taken) != CMD_NO_CMD)
             {
-                string stair_str = feature_description(feat, NUM_TRAPS, "",
-                                                       DESC_THE);
+                string stair_str = feature_description(feat, "", DESC_THE);
                 string verb = stair_climb_verb(feat);
 
                 if (coinflip()
@@ -2973,9 +2972,10 @@ vector<ghost_demon> load_bones_file(string ghost_filename, bool backup)
     }
     inf.close();
 
-    if (!debug_check_ghosts(result))
+    string err_msg;
+    if (!debug_check_ghosts(result, err_msg))
     {
-        string error = "Bones file is buggy: " + ghost_filename;
+        string error = "Bones file is buggy: " + ghost_filename + "\n" + err_msg;;
         throw corrupted_save(error, version);
     }
 
@@ -3338,6 +3338,7 @@ static bool _restore_game(const string& filename)
     // disabled. Doing this here rather in tags code because it can trigger
     // UI, which may not be safe if everything isn't fully loaded.
     check_selected_skills();
+    init_four_winds();
 
     return true;
 }
@@ -3585,6 +3586,24 @@ static bool _convert_obsolete_species()
                 "if you want to remain a Vampire.");
         }
         change_species_to(SP_HUMAN);
+        return true;
+    }
+    else if (you.species == SP_ARMATAUR)
+    {
+        if (!yesno(
+            "This Armataur save game cannot be loaded as-is. If you load it now,\n"
+            "your character will be converted to a Gale Centaur. Continue?",
+                       false, 'N'))
+        {
+            you.save->abort(); // don't even rewrite the header
+            delete you.save;
+            you.save = 0;
+            game_ended(game_exit::abort,
+                "Please load the save in an earlier version "
+                "if you want to remain an Armataur.");
+        }
+        change_species_to(SP_GALE_CENTAUR);
+        you.duration[DUR_STAMPEDE] = 0; // Was DUR_ROLLPAGE
         return true;
     }
 #endif

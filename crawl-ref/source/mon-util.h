@@ -191,7 +191,7 @@ static inline int get_resist(resists_t all, mon_resist_flags res)
     return v;
 }
 
-constexpr int SLYMDRA_HP_PER_HEAD = 30;
+constexpr int SLYMDRA_HP_PER_HEAD = 27;
 
 dungeon_feature_type preferred_feature_type(monster_type mt);
 
@@ -358,6 +358,7 @@ void mons_pacify(monster& mon, mon_attitude_type att = ATT_GOOD_NEUTRAL,
 bool mons_should_fire(const bolt &beam, const targeting_tracer& tracer,
                       bool ignore_good_idea = false);
 
+bool mon_type_has_spells(const monster_type mon_type);
 bool mons_has_los_ability(monster_type mon_type);
 bool is_offensive_spell(spell_type spell, maybe_bool needs_lof = maybe_bool::maybe);
 bool _mons_has_smite_attack(const monster* mons);
@@ -513,8 +514,6 @@ mon_threat_level_type mons_threat_level(const monster &mon,
                                         bool real = false);
 
 bool mons_foe_is_marked(const monster& mons);
-
-bool mons_stores_tracking_data(const monster& mons);
 
 bool mons_is_player_shadow(const monster& mon);
 bool mons_is_wrath_avatar(const monster &mon);

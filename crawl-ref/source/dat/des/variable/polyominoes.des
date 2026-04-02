@@ -17,6 +17,7 @@ function polyominoes_setup(e, extra)
   e.subst('b : xcvbmGT%0 .:50')
   e.subst('" : xcvbmGT%0 .:120')
   e.subst('x : x:240 c:30 v:30 b m')
+  e.tile("x = wall_pebble_green")
   e.subst('0 = 000.')
   e.subst('% = %%%.')
 end
@@ -713,19 +714,18 @@ MAP
     ....
 ENDMAP
 
-NAME: minmay_heptomino_l4
+NAME: regret_index_heptomino_l4
 : polyominoes_setup(_G, false)
 MAP
-  ......
-  .xxxx.
-...x..0...
-.x0x.xxxx.
-.x.x%%..x.
-.x..%%x.x.
-.xxxx.x0x.
-...0..x...
-  .xxxx.
-  ......
+     ...... ...
+     .xxxx.0.x.
+     .x%.....x.
+......x%.....x.
+.xxxx0x.x0xxxx.
+.x.....%x......
+.x.....%x.
+.x.0.xxxx.
+... ......
 ENDMAP
 
 ################################################################################

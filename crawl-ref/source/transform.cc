@@ -377,7 +377,12 @@ dice_def Form::get_special_damage(bool random, int skill) const
         skill = get_level(1);
 
     if (special_dice)
-        return (*special_dice)(skill, random);
+    {
+        dice_def dmg = (*special_dice)(skill, random);
+        if (dmg.size <= 0)
+            dmg.size = 1;
+        return dmg;
+    }
     else
         return dice_def();
 }
@@ -652,13 +657,13 @@ public:
 
     int get_aux_damage(bool random, int skill) const override
     {
-        return scaling_value(FormScaling().Base(10).Scaling(8), skill, random);
+        return scaling_value(FormScaling().Base(10).Scaling(6), skill, random);
     }
 
     // Base parrying bonus
     int get_effect_size(int skill = -1) const override
     {
-        return max(0, scaling_value(FormScaling().Base(8).Scaling(8), skill));
+        return max(0, scaling_value(FormScaling().Base(6).Scaling(6), skill));
     }
 };
 
@@ -1758,7 +1763,7 @@ bool feat_dangerous_for_form(transformation which_trans,
  */
 bool transforming_is_unsafe(transformation which_trans)
 {
-    if (feat_dangerous_for_form(transformation::none, env.grid(you.pos())))
+    if (feat_dangerous_for_form(which_trans, env.grid(you.pos())))
     {
         mprf(MSGCH_PROMPT, "%s right now would cause you to %s!",
                 which_trans == transformation::none ? "Untransforming" : "Transforming",
@@ -1852,6 +1857,20 @@ string cant_transform_reason(transformation which_trans,
 bool check_transform_into(transformation which_trans, bool involuntary,
                           const item_def* talisman)
 {
+
+    if (!involuntary && talisman && you.active_talisman()
+            && !check_warning_inscriptions(*you.active_talisman(), OPER_REMOVE))
+    {
+        canned_msg(MSG_OK);
+        return false;
+    }
+    if (!involuntary && talisman && you.active_talisman() != talisman
+            && !check_warning_inscriptions(*talisman , OPER_PUTON))
+    {
+        canned_msg(MSG_OK);
+        return false;
+    }
+
     const string reason = cant_transform_reason(which_trans, involuntary, true);
     if (!reason.empty())
     {
@@ -1869,6 +1888,15 @@ bool check_transform_into(transformation which_trans, bool involuntary,
         mprf("Transforming right now would cause you to %s!",
              feat == DNGN_DEEP_WATER ? "drown" : "burn");
         return false;
+    }
+
+    if (!involuntary && get_form(which_trans)->mult_hp(100) < 90)
+    {
+        if (!yesno("This transformation would significantly lower your maximum hit points. "
+                  "Transform anyway?", true, 'n'))
+        {
+            return false;
+        }
     }
 
     return true;
@@ -2216,7 +2244,7 @@ void untransform(bool skip_move, bool scale_hp, bool preserve_equipment,
     else if (old_form == transformation::rime_yak)
     {
         you.duration[DUR_RIME_YAK_AURA] = 0;
-        end_terrain_change(TERRAIN_CHANGE_RIME_YAK);
+        end_terrain_changes(TERRAIN_CHANGE_RIME_YAK);
     }
     else if (old_form == transformation::werewolf)
         you.duration[DUR_WEREFURY] = 0;
@@ -2545,7 +2573,8 @@ monster* get_solar_ember()
 
 bool maw_considers_appetising(const monster& mon)
 {
-    return mons_class_can_leave_corpse(mons_species(mon.type))
+    return (mon.holiness() & (MH_NATURAL | MH_PLANT))
+           && !mon.is_firewood()
            && !mon.is_summoned()
            && !(mon.flags & MF_HARD_RESET);
 }

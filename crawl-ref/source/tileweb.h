@@ -46,6 +46,7 @@ struct player_info
     bool wizard;
     bool explore;
     string species;
+    string species_display_name;
     string god;
     bool under_penance;
     int piety_rank;
@@ -227,6 +228,8 @@ public:
     void send_doll(const dolls_data &doll, bool submerged, bool ghost);
     void send_milestone(const xlog_fields &xl);
     void send_options();
+
+    void invalidate_item(int index);
 
 protected:
     int m_sock;

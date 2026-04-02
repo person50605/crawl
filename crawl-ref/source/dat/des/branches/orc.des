@@ -569,7 +569,7 @@ NAME:  nicolae_orc_tapped_out
 TAGS:  no_item_gen no_trap_gen luniq_orc_cave
 DEPTH: Orc
 ITEM:  stone q:1 / large rock q:1 w:3 / gold q:1 w:3
-KFEAT: ^ = shaft trap
+KFEAT: ^ = shaft
 SUBST: X = 'xx, ' = .:5 d:4 ^:1
 : if you.depth() == dgn.br_depth(you.branch()) then
 SUBST: ^ = .:5 d:4
@@ -1567,6 +1567,7 @@ KFEAT:  m = iron_grate
 KFEAT:  q = web / floor
 KFEAT:  X = x
 SUBST:  e = xx..., f = xx""", g = xm
+KMASK:  "2q = no_monster_gen
 KPROP:  "2q = no_tele_into
 TILE:   X = wall_spider
 TILE:   c = wall_stone_smooth
@@ -1722,7 +1723,7 @@ TAGS:  transparent
 DEPTH: Orc, !Orc:$
 KITEM: % = any scroll
 KMONS: %1 = patrolling orc / nothing w:15
-KFEAT: ^ = shaft trap
+KFEAT: ^ = shaft
 MAP
 xxxxxxxxxx
 x^%x^%x^%x

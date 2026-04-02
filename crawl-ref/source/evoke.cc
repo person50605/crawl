@@ -310,12 +310,7 @@ static bool _place_webs()
     const int max_range = LOS_DEFAULT_RANGE / 2 + 2;
     for (monster_near_iterator mi(you.pos(), LOS_SOLID); mi; ++mi)
     {
-        trap_def *trap = trap_at((*mi)->pos());
-        // Don't destroy non-web traps or try to trap monsters
-        // currently caught by something.
         if (you.pos().distance_from((*mi)->pos()) > max_range
-            || (!trap && env.grid((*mi)->pos()) != DNGN_FLOOR)
-            || (trap && trap->type != TRAP_WEB)
             || (*mi)->friendly()
             || (*mi)->caught())
         {
@@ -325,14 +320,7 @@ static bool _place_webs()
         if (!x_chance_in_y(web_chance, 100))
             continue;
 
-        if (trap && trap->type == TRAP_WEB)
-            destroy_trap((*mi)->pos());
-
-        place_specific_trap((*mi)->pos(), TRAP_WEB, 1); // 1 ammo = temp
-        // Reveal the trap
-        env.grid((*mi)->pos()) = DNGN_TRAP_WEB;
-        trap = trap_at((*mi)->pos());
-        trap->trigger(**mi);
+        mi->trap_in_web();
         webbed = true;
     }
     return webbed;
@@ -1099,11 +1087,14 @@ bool evoke_item(item_def& item, dist *preselect)
         return true;
 
     case OBJ_BAUBLES:
+        if (!check_transform_into(transformation::flux, false))
+            return false;
+
         mprf("You crush the flux bauble in your %s and feel its energy "
             "flooding your body.", you.hand_name(false).c_str());
         ASSERT(in_inventory(item));
         dec_inv_item_quantity(item.link, 1);
-        transform(0, transformation::flux);
+        transform(0, transformation::flux, true);
         you.props[FLUX_ENERGY_KEY] = 45;
         return true;
 
@@ -1400,15 +1391,16 @@ int stardust_orb_max(bool max)
 
 int stardust_orb_power(int mp_spent, bool max_evo)
 {
-    const int skill = max_evo ? 108 : you.skill(SK_EVOCATIONS, 4);
-    int pow = (skill + 15) * (100 + (mp_spent * 25)) / 100;
+    const int skill = max_evo ? 81 : you.skill(SK_EVOCATIONS, 3);
+    int pow = (skill + 10) * (100 + (mp_spent * 25)) / 100;
     return pow;
 }
 
 void stardust_orb_trigger(int mp_spent)
 {
     if (!you.duration[DUR_STARDUST_COOLDOWN]
-        && you.wearing_ego(OBJ_ARMOUR, SPARM_STARDUST))
+        && you.wearing_ego(OBJ_ARMOUR, SPARM_STARDUST)
+        && !you.has_mutation(MUT_HP_CASTING))
     {
         schedule_stardust_fineff(&you, stardust_orb_power(mp_spent),
                                  stardust_orb_max());

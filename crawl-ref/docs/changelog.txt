@@ -1,5 +1,37 @@
-Stone Soup 0.34 (through 0.34-a0-1989-gd38d1f0726)
---------------------------------------------------
+Stone Soup 0.34.1 (20260314)
+----------------------------
+
+Bugfix release
+--------------
+* Fix the Lua error handler causing slowdowns seen in vaults like Pan's Disco
+  Hall.
+* Properly mark unidentified talismans evil/chaotic as appropriate.
+* Allow deconstructing forgecraft allies while wielding a ranged weapon.
+* Fix Freezing Cloud not having a self-damage warning prompt.
+* Fix the force_more prompts for dancing weapons of distortion.
+* Fix banished Orb Guardians not activating the Boundless Tesseracts.
+* Fix Duel/Banishment on top of a portal entrance expiring that entrance.
+* Prompt for wearing any talisman that would lower max HP by more than 10%.
+* Fix randart Bane scarves having hidden AC (Back-form)
+* Fix Revenant spells being free and boosted by Enkindle if cast via Sif
+  Muna's Divine Exegesis.
+* Fix removing Fragile equipment not triggering unequip effects before being
+  destroyed.
+* Don't have Dithmenos' Marionette treat monsters it charms as hostile for
+  subsequent actions.
+* Fix Dominate Undead not working properly for friendly casters.
+* Fix the force_scroll_targeter option interfering with ability targeters.
+* Fix anacondas taking no damage from cactus giant spines.
+* A new clua function you.zot_orb_monster() to see the type of orb monster the
+  player will face in Zot, if known.
+* New clua functions for checking visibility between cells:
+  view.cell_see_cell_no_trans(), view.cell_see_cell_solid(), and
+  view.cell_see_cell_solid_see().
+* 36 other bug fixes, interface improvements, and documentation updates.
+
+
+Stone Soup 0.34.0 (20260205)
+----------------------------
 
 Highlights
 ----------
@@ -37,7 +69,7 @@ Branches, Environment
 * The Crypt end vault's old thematic item rewards have been moved into a unique,
   guaranteed shop containing a larger quantity of the prior options at high
   prices.
-* The Slime Pits has recieved layout changes:
+* The Slime Pits has received layout changes:
   - All staircases in the branch are now slimy and can no longer be climbed back
     up until The Royal Jelly is dead (or the player worships Jiyva).
   - Going down on a slimy staircase confers a status that greatly increases HP
@@ -50,14 +82,14 @@ Branches, Environment
 * The Halls of Zot will now contain one of three types of orb monster each game,
   each wielding a different element and form of strategic damage.
   - The orb type one will encounter that game is indicated via statues placed
-    by the Temple entrance in the Dungeon and the Zot entrance in Depths. This
-    can also be viewed from the the Dungeon overview screen (ctrl+O) once seen.
-* The last floor of Zot contains now contains two Boundless Tesseracts, immobile
-  enemy spawners with fast regeneration.
+    by the Temple entrance in the Dungeon and the Zot entrance in the Depths.
+    This can also be viewed from the Dungeon overview screen (ctrl+O) once seen.
+* The last floor of Zot now contains two Boundless Tesseracts, immobile enemy
+  spawners with fast regeneration.
   - Tesseracts wake up the first time one kills an Orb Guardian. Once a
     tesseract wakes up, both are automatically detected, and 4 to 7 new monsters
     will appear outside of the Orb vault. Further monsters will spawn at random
-    locations across the entire floor an average of once every 50 turns. These
+    locations across the entire floor on average of once every 50 turns. These
     will always be outside of the player's sight until at least 50 monsters have
     been created this way. These spawns reward no XP, are marked as originating
     from the tesseracts, are capped to 60 on the floor at a time, and will
@@ -68,7 +100,7 @@ Branches, Environment
 * The Orb status from being in Zot or having picked up the Orb of Zot now also
   fuzzes the destination of scrolls of blinking by up to two spaces.
 * The depth at which the player enters the Abyss is now based upon their XL,
-  regarldess of whether they arrive by banishment or entering a gateway
+  regardless of whether they arrive by banishment or entering a gateway
   themselves.
   - Abyss shifts can no longer pull the player deeper than they otherwise would
     have entered it (unless they spend a while there at max XL), and the Abyss
@@ -80,7 +112,7 @@ Branches, Environment
   - Troves will no longer ask for any consumables besides scrolls of acquirement
     and will no longer ask for specific named items from shops.
   - Equipment costs are less common. Demon weapons are all interchangeable and
-    and heavier dragon scales are rarer.
+    heavier dragon scales are rarer.
   - The Slimy / Abyssal rune troves and Horn of Geryon troves are more common.
   - Piety troves now use a new debuff that temporarily caps one's piety at 0
     until XP is gained instead of permanently draining it, allowing them to
@@ -125,7 +157,7 @@ Character
     create fragile clones of itself.
   - Bane of Paradox, which gives a small chance for each new monster you
     encounter to learn Manifold Assault with a chance to blink after casting it.
-  - Bane of Snow-blindness, which makes suffering cold damage something inflict
+  - Bane of Snow-blindness, which makes suffering cold damage sometimes inflict
     Blind and Weak.
   - Bane of Stumbling, which inflicts -25 EV when moving or standing still.
   - Bane of Succour, which makes killing enemies heal other nearby enemies
@@ -151,7 +183,7 @@ Character
   - Efficient Metabolism, which doubles the duration of potion status effects.
   - Feed Off Suffering, which restores HP and MP after killing poisoned or
     drained foes.
-  - Initially attractive, which sometimes pulls monsters close to the player
+  - Initially Attractive, which sometimes pulls monsters close to the player
     when first seen (and then sometimes wakes them up).
   - Lucky, which gives a small chance for floor items the player encounters to
     be randarts.
@@ -227,7 +259,7 @@ Gods
   - Kiku wrath applies the Sign of Ruin instead of tormenting, has a hard cap
     on draining for lower amounts that can no longer be resisted by rN+, and
     also now applies Doom.
-  - Okawaru wrath summons are more varied and scale more smoothly to player xl.
+  - Okawaru wrath summons are more varied and scale more smoothly to player XL.
   - Qazlal wrath now applies the Banes of Heatstroke, Snow-blindness, and
     Electrospasm instead of transient mutations of rF-, rC-, or rElec-.
 
@@ -240,7 +272,7 @@ Interface and Options
     - New show_paged_inventory option: disables this page behaviour for the
       (i)nventory screen.
   - Talismans are now considered gear and are (p)ut on instead of e(v)oked.
-  - Jewellery autopick-up no longer picks up extra copies of non-artifact
+  - Jewellery autopickup no longer picks up extra copies of non-artifact
     jewellery past the max amount one can wear at a time.
   - Dropping consumables now disables them from autopickup by default.
   - The item_slot option has been replaced with gear_slot and
@@ -286,7 +318,7 @@ Interface and Options
 Items
 -----
 * Players now have four separate inventories: 52 pieces of gear (including
-  throwing weapons, and unlimited potions, scrolls, and evokable items.
+  throwing weapons), and unlimited potions, scrolls, and evokable items.
   - Each inventory uses a separate 52 letters (ie: both a scroll and a potion
     may be mapped to the same letter at the same time), and most consumables
     now have default letter assignments when identified.
@@ -299,24 +331,33 @@ Items
     contain an additional parchment shop.
   - Randbooks now only appear in select vaults or via acquirement and
     Sif Muna gifts.
-  - Higher-spell-level are now somewhat rarer early in the game and more
+  - Higher-level spells are now somewhat rarer early in the game and more
     common later.
+* New talismans:
+  - Spore talismans, tier 2 talismans providing Spore Form. This melds one's
+    offhand and feet into sporulating fungi, allowing attacks to weaken enemies
+    and creating rows of burstshrooms behind them. These burstshrooms explode
+    after a short delay and sometimes daze those hit.
+  - Eel talismans, tier 3 talismans providing Eel Hands Form. This melds one's
+    gloves, weapon, and offhand slots into twin eels, which provide rElec, and
+    also make one's melee attacks sometimes produce short-range electric jolts.
+    When one falls below 50%, a stronger jolt will trigger immediately.
 * New amulets:
-  - Amulets of Alchemy, which give an Alchemy enhancer and also grant
+  - Amulets of Chemistry, which give an Alchemy enhancer and also grant
     players a small amount of mp whenever they drink non-useless potions.
   - Amulets of Dissipation, which cause time-based negative status effects to
     expire twice as quickly.
-  - Amulets of Wildshape, which gives +5 Shapeshifting skill.
+  - Amulets of Wildshape, which give +5 Shapeshifting skill.
 * New orbs:
   - Orbs of attunement, which double the enhancers provided by wielded
-    magical staves and also makes melee attacks performed with them restore a
+    magical staves and also make melee attacks performed with them restore a
     small amount of MP.
   - Orbs of glass, which may inflict Fragility on nearby enemies whenever
     they're injured, scaling with Evocations skill.
   - Orbs of mesmerism, which inflict Daze on nearby enemies when one is injured
     by melee attacks, are recharged by not moving, and scaled heavily with
     Evocations skill.
-  - Orbs of pyromania, which give a Fire enhancer and also produces explosions
+  - Orbs of pyromania, which give a Fire enhancer and also produce explosions
     around the wielder whenever they directly kill a monster without using
     attacks, scaling with Evocations skill.
   - Orbs of stardust, which conjure fast-moving shooting star projectiles
@@ -341,10 +382,10 @@ Items
   - Armour of command, which gives Summoning spells a success chance and
     spellpower bonuses based on one's Armour skill.
   - Armour of death, which gives Necromancy spells a success chance and
-    spellpower bonus, but make all non-Necromancy spells cost as much HP as they
+    spellpower bonus, but makes all non-Necromancy spells cost as much HP as they
     cost MP.
   - Armour of resonance, which gives Forgecraft spells a success rate bonus and
-    also increase the damage of the wearer's melee attacks based on their
+    also increases the damage of the wearer's melee attacks based on their
     Forgecraft skill.
 * New other armour egos:
   - Hats of sniping, which increase ranged weapon and thrown item damage
@@ -360,12 +401,33 @@ Items
 * Shields can now get the corrosion resistance ego, and Tower Shields may be
   Ponderous.
 * Cloaks of preservation are now renamed to be of corrosion resistance.
+* Fire dragon scales encumbrance rating has decreased, from 11 to 9.
+* Further talisman changes:
+  - Blade Form has been reworked. It is now tier 4, melds nothing, and provides
+    two melee auxiliary attacks instead of an unarmed combat bonus. In addition,
+    it provides SH while attacking based on your Slaying.
+  - Fortress Crab Form now doubles most egos and artifact properties on the body
+    armour equipped. It also provides a slightly higher multiplier to body
+    armour AC (from +135% at max skill to +150%) and Breathe Rust costs slightly
+    less HP.
+  - Maw Form is now tier 3. Its bite attack triggers less often with fast
+    weapons, but gets additional bonus damage from strength. Kills now heal more
+    in total (especially at high skill), but over several turns. It can now
+    briefly mesmerise the player when an edible monster is first encountered.
+  - Protean talismans can no longer become maw talismans, but can become spore
+    talismans instead.
+  - Sphinx Form and Vampire Form now see invisible.
+  - Vampire Form has a high chance to briefly daze living / demonic / holy
+    monsters when they first notice the player, preventing them from shouting.
+    The Bat Swarm ability can now be manually cancelled, and its cooldown is now
+    shortened by Shapeshifting skill.
+  - Werewolf Form now can wear helmets and cloaks.
 * Further general orb changes:
   - Orbs of energy and orbs of guile now scale their effects with the wielder's
     Evocations skill.
   - Orbs of light no longer spawn naturally, but are still given to Monks on
     starting the game.
-  - Orbs are now more common.
+  - Orbs are now more common, and more expensive in shops.
 * Talismans are cheaper in shops.
 * Stones are now much less common.
 * Removed items: rings of fire, rings of ice, orbs of wrath.
@@ -386,7 +448,7 @@ Monsters
   - Colossal amoebae, which create copies of themselves when they hit foes.
   - Creeping plasmodia, which launch explosive acid spores that can spread
     weaker plasmodia to other walls.
-  - Eyes of draining, rare sights that rapidly drain the player's maximum HP
+  - Eyes of draining, rare sights that rapidly drain the player's maximum HP.
   - Morphogenic oozes, whose melee attacks can temporarily turn players into
     jellies.
   - Slymdras, lethally acidic combinations of hydras and slime creatures.
@@ -394,7 +456,7 @@ Monsters
 * Two new orb types rotate with orbs of fire in Zot each game:
   - Orbs of Winter, which cast Flash Freeze, Ozocubu's Refrigeration,
     and inflict a new Ostracism debuff that temporarily reduces one's piety.
-  - Orbs of Entropy, which cast Bolt of Draining, Acid Ball, and
+  - Orbs of Entropy, which cast Bolt of Draining and Acid Ball, and can
     inflict Doom upon their foes.
 * New unique: Cassandra, an oracle of Ashenzari who foresees great Doom in
   your future.
@@ -497,16 +559,21 @@ Monsters
 
 Spells
 ------
+* Curse of Agony's range has been increased by 1.
 * Dazzling Flash has been renamed Gloom and moved from Hexes / Fire to
   Hexes / Necromancy. It is now silent.
 * Enfeeble now inflicts a new Diminished Spells debuff that lowers the target's
   spellpower rather than inflicting antimagic.
+* Fortress Blast's explosion radius has been increased from 5x5 to 7x7.
+* Hellfire Mortar can no longer be recast until the lava from a previous cast
+  has expired, but this lava now disappears more quickly.
 * Martyr's Knell's shade now has lower max HP and regeneration (to account for
   the improvement to Injury Bond), but higher AC and EV.
 * Both players and monsters failing to resist Petrification while already
   petrifying no longer instantly completes the Petrification, but Petrification
   is slightly more difficult to resist in exchange.
 * Silence no longer has an innate Stealth penalty.
+* Sphinx Sisters' summons are now slightly weaker and have a shorter duration.
 * Summon Horrible Things now increases the caster's Doom rather than sometimes
   inflicting temporary Will- mutations.
 
@@ -523,7 +590,7 @@ Tiles
   * Walls: Lair + Gloorx Vloq's rock walls, Lair + Orc + Elf + Depths entry +
            Zot:5 + Ossuary + Zonguldrok's Shrine stone walls, Vaults +
            Maxwell's Workshop metal walls, Vaults + Depths crystal walls.
-  * Floors: Lair, Elf's Hall of Blades, Vaults hard vaults, Vaults:$, Zot
+  * Floors: Lair, Elf's Hall of Blades, Vaults hard vaults, Vaults:5, Zot
             entry vaults, Cerebov's fortress, grassy vaults, crystal vaults.
   * GUI: exclusions.
 * New wall and floor tiles for vaults: stone magic shelves, magic crackling

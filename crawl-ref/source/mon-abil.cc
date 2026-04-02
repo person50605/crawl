@@ -328,29 +328,6 @@ static monster* _do_split(monster* thing, const coord_def & target, bool quiet =
     return new_slime;
 }
 
-// Cause a monster to lose a turn. has_gone should be true if the
-// monster has already moved this turn.
-static void _lose_turn(monster* mons, bool has_gone)
-{
-    const monsterentry* entry = get_monster_data(mons->type);
-
-    // We want to find out if mons will move next time it has a turn
-    // (assuming for the sake of argument the next delay is 10). If it's
-    // already going to lose a turn we don't need to do anything.
-    mons->speed_increment += entry->speed;
-    if (!mons->has_action_energy())
-        return;
-    mons->speed_increment -= entry->speed;
-
-    mons->speed_increment -= entry->energy_usage.move;
-
-    // So we subtracted some energy above, but if mons hasn't moved yet
-    // /this turn, that will just cancel its turn in this round of
-    // world_reacts().
-    if (!has_gone)
-        mons->speed_increment -= entry->energy_usage.move;
-}
-
 // Actually merge two slime creatures, pooling their hp, etc.
 // initial_slime is the one that gets killed off by this process.
 static void _do_merge_slimes(monster* initial_slime, monster* merge_to)
@@ -378,13 +355,12 @@ static void _do_merge_slimes(monster* initial_slime, monster* merge_to)
         merge_to->props[OKAWARU_DUEL_CURRENT_KEY] = true;
     }
 
-    // Merging costs the combined slime some energy. The idea is that if 2
-    // slimes merge you can gain a space by moving away the turn after (maybe
-    // this is too nice but there will probably be a lot of complaints about
-    // the damage on higher level slimes). We see if mons has gone already by
-    // checking its mindex (this works because handle_monsters just iterates
-    // over env.mons in ascending order).
-    _lose_turn(merge_to, merge_to->mindex() < initial_slime->mindex());
+    // Give the player 10 aut to act without the merged slime creature acting
+    // (if the slime isn't hasted). The idea is that if 2 slimes merge you can
+    // gain a space by moving away the turn after (maybe this is too nice but
+    // there will probably be a lot of complaints about the damage on higher
+    // level slimes).
+    merge_to->speed_increment = 79 - mons_class_base_speed(merge_to->type);
 
     // Overwrite the state of the slime getting merged into, because it
     // might have been resting or something.
@@ -612,15 +588,17 @@ bool slime_creature_polymorph(monster& slime, poly_power_type power)
     return monster_polymorph(&slime, RANDOM_POLYMORPH_MONSTER, power);
 }
 
-static int _slymdra_split(monster& slymdra, int count = -1, bool quiet = false)
+int slymdra_split(monster& slymdra, int count, bool quiet)
 {
+    ASSERT(slymdra.type == MONS_SLYMDRA);
+
     int num_splits = 0;
     int& fake_heads = slymdra.props[SLYMDRA_FAKE_HEADS_KEY].get_int();
     int& real_slimes = slymdra.props[SLYMDRA_SLIMES_EATEN_KEY].get_int();
     if (count == -1)
         count = slymdra.num_heads - 4;
 
-    if (real_slimes == 0 && fake_heads == 0)
+    if (count <= 0 || real_slimes == 0 && fake_heads == 0)
         return 0;
     for (distance_iterator di(slymdra.pos(), true, true, 2); di; ++di)
     {
@@ -637,7 +615,7 @@ static int _slymdra_split(monster& slymdra, int count = -1, bool quiet = false)
                 }
 
                 // If we've split out as many things as we want or as many as we *can*, return.
-                if (++num_splits == count || real_slimes == 0 && fake_heads == 0)
+                if (++num_splits >= count || real_slimes == 0 && fake_heads == 0)
                     return num_splits;
             }
         }
@@ -649,7 +627,7 @@ static int _slymdra_split(monster& slymdra, int count = -1, bool quiet = false)
 bool slymdra_polymorph(monster& slymdra, poly_power_type power)
 {
     ASSERT(slymdra.type == MONS_SLYMDRA);
-    int count = _slymdra_split(slymdra, -1, true);
+    int count = slymdra_split(slymdra, -1, true);
 
     if (you.can_see(slymdra) && count > 0)
     {
@@ -730,11 +708,14 @@ static void _starcursed_scream(monster* mon, actor* target)
     {
         if (you.see_cell(target->pos()))
         {
-            mprf(target->as_monster()->friendly() ? MSGCH_FRIEND_SPELL
-                                                  : MSGCH_MONSTER_SPELL,
-                 "%s writhes in pain as voices assail %s mind.",
+            bool mind = mons_intel(*target->as_monster()) > I_BRAINLESS;
+            mprf(mon->friendly() ? MSGCH_FRIEND_SPELL
+                                 : MSGCH_MONSTER_SPELL,
+                 "%s writhes%s as voices assail %s %s.",
                  target->name(DESC_THE).c_str(),
-                 target->pronoun(PRONOUN_POSSESSIVE).c_str());
+                 mind ? " in pain" : "",
+                 target->pronoun(PRONOUN_POSSESSIVE).c_str(),
+                 mind ? "mind" : "being" );
         }
     }
     else
@@ -747,7 +728,7 @@ static void _starcursed_scream(monster* mon, actor* target)
 
     for (monster *voice : chorus)
         if (voice->alive())
-            voice->add_ench(mon_enchant(ENCH_SCREAMED, voice, 1));
+            voice->add_ench(mon_enchant(ENCH_ABILITY_COOLDOWN, voice, 1));
 }
 
 static bool _will_starcursed_scream(monster* mon)
@@ -761,7 +742,7 @@ static bool _will_starcursed_scream(monster* mon)
 
         // Don't scream if any part of the chorus has a scream timeout
         // (This prevents it being staggered into a bunch of mini-screams)
-        if (mi->has_ench(ENCH_SCREAMED))
+        if (mi->has_ench(ENCH_ABILITY_COOLDOWN))
             return false;
         else
             n++;
@@ -784,6 +765,10 @@ static bool _lost_soul_affectable(const monster &mons)
 
     // undead can be reknit, naturals ghosted, everyone else is out of luck
     if (!(mons.holiness() & (MH_UNDEAD | MH_NATURAL)))
+        return false;
+
+    // Slowly dying monsters should not be made permanently alive
+    if (mons.has_ench(ENCH_SLOWLY_DYING))
         return false;
 
     // already been revived once
@@ -1117,16 +1102,16 @@ static bool _slymdra_try_merge(monster* mons)
 
 static bool _slymdra_split_or_merge(monster* mons)
 {
-    if (mons->behaviour == BEH_SEEK)
+    const actor* foe = mons->get_foe();
+    if (mons->behaviour == BEH_SEEK
+        && foe && mons->see_cell_no_trans(foe->pos()) && coinflip())
     {
-        const actor* foe = mons->get_foe();
-        if (foe && mons->see_cell_no_trans(foe->pos()) && coinflip())
-            return _slymdra_try_merge(mons);
+        return _slymdra_try_merge(mons);
     }
-    else if (mons->behaviour == BEH_WANDER && mons->num_heads > 4
-             && one_chance_in(15))
+    else if (mons->num_heads > 4
+             && (!foe || !mons->see_cell(foe->pos())) && one_chance_in(10))
     {
-        return _slymdra_split(*mons, 1);
+        return slymdra_split(*mons, 1);
     }
 
     return false;
@@ -1240,57 +1225,6 @@ bool mon_special_ability(monster* mons)
             used = true;
         }
         break;
-
-    case MONS_THORN_HUNTER:
-    {
-        // If we would try to move into a briar (that we might have just created
-        // defensively), let's see if we can shoot our foe through it instead
-        if (actor_at(mons->pos() + mons->props[MMOV_KEY].get_coord())
-            && actor_at(mons->pos() + mons->props[MMOV_KEY].get_coord())->type == MONS_BRIAR_PATCH
-            && !one_chance_in(3))
-        {
-            actor *foe = mons->get_foe();
-            if (foe && mons->can_see(*foe))
-            {
-                bolt beem = setup_targeting_beam(*mons);
-                beem.target = foe->pos();
-                setup_mons_cast(mons, beem, SPELL_THORN_VOLLEY);
-
-                targeting_tracer tracer;
-                fire_tracer(mons, tracer, beem);
-                if (mons_should_fire(beem, tracer))
-                {
-                    make_mons_stop_fleeing(mons);
-                    _mons_cast_abil(mons, beem, SPELL_THORN_VOLLEY);
-                    used = true;
-                }
-            }
-        }
-        // Otherwise, if our foe is approaching us, we might want to raise a
-        // defensive wall of brambles (use the number of brambles in the area
-        // as some indication if we've already done this, and shouldn't repeat)
-        else if (mons->props[FOE_APPROACHING_KEY].get_bool() == true
-                 && !mons_is_confused(*mons)
-                 && coinflip())
-        {
-            int briar_count = 0;
-            for (monster_near_iterator mi(mons, LOS_NO_TRANS); mi; ++mi)
-            {
-                if (mi->type == MONS_BRIAR_PATCH
-                    && grid_distance(mons->pos(), mi->pos()) > 3)
-                {
-                    briar_count++;
-                }
-            }
-            if (briar_count < 4) // Probably no solid wall here
-            {
-                bolt beem; // unused
-                _mons_cast_abil(mons, beem, SPELL_WALL_OF_BRAMBLES);
-                used = true;
-            }
-        }
-    }
-    break;
 
     case MONS_WATER_NYMPH:
     case MONS_NORRIS:
@@ -1507,9 +1441,6 @@ bool pyrrhic_recollection(monster& nobody)
         mons_speaks_msg(&nobody, speech, MSGCH_TALK);
     }
 
-    // Heal and move.
-    if (was_injured)
-        monster_blink(&nobody, true, true);
     nobody.heal(nobody.max_hit_points);
 
     // If this was a phantom mirror copy, allow it to revive, but don't wipe out
@@ -1530,12 +1461,15 @@ bool pyrrhic_recollection(monster& nobody)
     // but we don't have that at the moment.
     mon_enchant haste = nobody.get_ench(ENCH_HASTE);
     mon_enchant might = nobody.get_ench(ENCH_MIGHT);
-    nobody.timeout_enchantments();
+    nobody.timeout_enchantments(10000, true);
     nobody.add_ench(summon_timer);
     nobody.add_ench(haste);
     nobody.add_ench(might);
 
     nobody.add_ench(mon_enchant(ENCH_PYRRHIC_RECOLLECTION, &nobody, random_range(300, 500)));
+
+    if (was_injured)
+        monster_blink(&nobody, true, true);
 
     // Don't immediately expire summons (we want them to stick around into the next phase),
     // but at least make them time out a bit faster.
@@ -1739,5 +1673,81 @@ void tesseract_action(monster& mon)
 
         --allowed;
         ++count;
+    }
+}
+
+// Checks if a thorn hunter is in range to shoot from their current position
+bool thorn_hunter_range_check(monster& mon)
+{
+    const actor* foe = mon.get_foe();
+    if (foe)
+    {
+        bolt beem = setup_targeting_beam(mon);
+        beem.target = foe->pos();
+        setup_mons_cast(&mon, beem, SPELL_THORN_VOLLEY);
+        targeting_tracer tracer;
+        fire_tracer(&mon, tracer, beem);
+        if (mons_should_fire(beem, tracer))
+            return true;
+    }
+
+    return false;
+}
+
+void thorn_hunter_raise_barrier(monster& mon, bool skip_proximity_check)
+{
+    if (mon.has_ench(ENCH_ABILITY_COOLDOWN))
+        return;
+
+    if (!skip_proximity_check)
+    {
+        bool found = false;
+        for (radius_iterator ri(mon.pos(), 3, C_SQUARE, LOS_NO_TRANS, true); ri; ++ri)
+        {
+            // Raising briars against adjacent enemies is pointless.
+            if (adjacent(*ri, mon.pos()))
+                continue;
+
+            if (const actor* act = actor_at(*ri))
+            {
+                if (!mons_aligned(act, &mon) && !act->is_firewood())
+                {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        // Don't raise a proximity barrier without a nearby enemy.
+        if (found == false)
+            return;
+    }
+
+    // Now check that we can still fire usefully from our current position
+    // (or there's no point in bunkering down).
+    if (!thorn_hunter_range_check(mon))
+        return;
+
+    // Finally, let's actually make the barricade
+    bool made_briar = false;
+    for (radius_iterator ri(mon.pos(), 2, C_SQUARE, LOS_NO_TRANS); ri; ++ri)
+    {
+        if (ri->distance_from(mon.pos()) == 2 && coinflip())
+            continue;
+
+        if (in_bounds(*ri) && !actor_at(*ri) && monster_habitable_grid(MONS_BRIAR_PATCH, *ri))
+        {
+            mgen_data briar = mgen_data(MONS_BRIAR_PATCH, SAME_ATTITUDE(&mon),
+                                        *ri, MHITNOT, MG_FORCE_PLACE);
+            briar.set_summoned(&mon, SPELL_CAGE_OF_BRAMBLES, random_range(60, 110), false, false);
+            if (create_monster(briar))
+                made_briar = true;
+        }
+    }
+
+    if (made_briar)
+    {
+        mon.add_ench(mon_enchant(ENCH_ABILITY_COOLDOWN, &mon, random_range(150, 250)));
+        simple_monster_message(mon, " raises briars to defend itself!", false, MSGCH_MONSTER_SPELL);
     }
 }

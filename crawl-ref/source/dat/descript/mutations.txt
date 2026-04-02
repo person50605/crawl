@@ -154,13 +154,14 @@ types, doubling the duration of all status effects gained via potions.
 protean grace mutation
 
 Your limbs are overflowing with morphogenic power, guiding your every movement.
-Every two non-innate mutations you have (rounded up) also provides +1 EV and
-Slay +1, improving your accuracy and damage with melee and ranged attacks. This
-still applies even when the mutations would be suppressed by a different form.
+Each other non-innate mutation you have also provides +1 EV and Slay +1 (up to
+a limit of 7), improving your accuracy and damage with melee and ranged attacks.
+This still applies even when the mutations would be suppressed by a different
+form.
 
 You currently gain
 {{
-    num = math.ceil(you.how_mutated(true, false, false, true, false) / 2)
+    num = math.min(you.how_mutated(true, false, false, true, false), 7) - 1
     return "+" .. num .. " EV and Slay +" .. num .. " from this mutation."
 }}
 %%%%
@@ -181,7 +182,7 @@ artefact. Each level of this mutation increases that chance.
 %%%%
 reckless mutation
 
-Your recklessness halves your SH, but the damage you deal with two-handed
+Your recklessness halves your SH, but the damage you deal with two-handed melee
 weapons is increased by 15%.
 %%%%
 # ------ Auxes -----
@@ -506,7 +507,7 @@ Your body is covered in a fungus that metabolises beneficial potions you drink
 and sometimes emits spores which transmit their effects to nearby monsters -
 whether friend or foe.
 %%%%
-spiteful blood
+spiteful blood mutation
 
 Your blood pulses with a strange predatory malice. When you become significantly
 injured, some of it may rise up to attack you - though this may not happen again
@@ -1014,8 +1015,48 @@ accursed mutation
 
 Your accursed nature makes it harder to dispel malignant energies from your
 being, reducing the rate at which you can recover from Doom and Banes.
-# ------ Fakemut descriptions ------
 %%%%
+stampede mutation
+
+You rampage swiftly towards enemies and can continue to trample forward once
+you reach them, pushing entire lines of enemies backwards as you attack.
+
+Performing any action besides a rampage movement will end your stampede.
+
+The second level of this mutation augments your stampede with the blessing of
+one of the four winds, based on your highest skill:
+
+ North Wind: Melee weapon skills (except Short Blades)\n
+South Wind: Short Blades or Stealth\n
+East Wind:  Magic skills (except Spellcasting)\n
+West Wind:  Ranged Weapons skill\n
+%%%%
+North Wind's embodiment mutation
+
+You rapidly regenerate up to 70% of all damage you suffer while Stampeding. The
+rate of this regeneration increases with your maximum HP.
+%%%%
+West Wind's embodiment mutation
+
+Whenever you rampage towards foes while wielding a ranged weapon, you also fire
+a penetrating shot that does increased damage and your next normal attack
+becomes empowered to fire at multiple foes at once.
+%%%%
+East Wind's embodiment mutation
+
+Whenever you Rampage, you regain a small percentage of your maxmimum MP and
+unleash a bitter wind that makes all enemies within 2 spaces of you Exposed,
+increasing the damage they take from non-attack sources by 35% and also their
+chance to be hit or affected by them.
+
+Additionally, casting spells will not cause you to stop Stampeding.
+%%%%
+South Wind's embodiment mutation
+
+Your stealth is increased by 50% while Rampaging and whenever you successfully
+stab an enemy, your next Rampage movement becomes instant.
+%%%%
+# ------ Fakemut descriptions ------
 vampire fangs mutation
 
 When you perform a stab attack against a living monster with blood, you heal for
@@ -1141,13 +1182,13 @@ maw attack mutation
 
 Your maw sometimes bites enemies in melee, at a rate independant of your own
 attack speed (once per 15 aut, on average). Its base damage is directly
-increased by 3/4rd of your strength.
+increased by 75% of your strength.
 %%%%
 devouring maw mutation
 
-When you kill an edible enemy in melee (anything which drops a corpse), your
-maw devours it, greatly increasing your regeneration for a short while. More
-powerful enemies provide a longer duration of this effect.
+When you kill an edible enemy in melee (any hostile, non-summoned, living or
+plant monster), your maw devours it, greatly increasing your regeneration for a
+short while. More powerful enemies provide a longer duration of this effect.
 %%%%
 growling stomach mutation
 

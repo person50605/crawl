@@ -952,7 +952,7 @@ static const struct spell_desc spelldata[] =
         | spflag::WL_check,
     5,
     100,
-    3, 3,
+    4, 4,
     0,
     TILEG_AGONY,
 },
@@ -1386,7 +1386,7 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_SUMMON_UFETUBUS, "Summon Ufetubus",
+    SPELL_UFETUBI_SWARM, "Ufetubi Swarm",
     spschool::summoning,
     spflag::unholy | spflag::monster,
     4,
@@ -2251,8 +2251,8 @@ static const struct spell_desc spelldata[] =
 },
 
 {
-    SPELL_WALL_OF_BRAMBLES, "Wall of Brambles",
-    spschool::conjuration | spschool::earth,
+    SPELL_CAGE_OF_BRAMBLES, "Cage of Brambles",
+    spschool::earth,
     spflag::monster,
     5,
     100,
@@ -4602,7 +4602,7 @@ static const struct spell_desc spelldata[] =
     200,
     -1, -1,
     0,
-    TILEG_PASSAGE_OF_GOLUBRIA,
+    TILEG_PLANAR_OVERLAY,
 },
 
 {

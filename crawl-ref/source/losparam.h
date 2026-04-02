@@ -149,8 +149,19 @@ public:
 };
 extern const opacity_no_actor opc_no_actor;
 
-// A cell is considered clear unless the player knows it's
-// opaque.
+// Make any actor the player can see, but cannot shoot through
+// (as well as all solid features) block.
+class opacity_unblocked_shot : public opacity_func
+{
+public:
+    CLONE(opacity_unblocked_shot)
+
+    opacity_type operator()(const coord_def& p) const override;
+};
+extern const opacity_unblocked_shot opc_unblocked_shot;
+
+// For the exclusion and map opacity types based on player map knowledge, an
+// unknown cell is considered clear.
 class opacity_excl : public opacity_func
 {
 public:
@@ -159,6 +170,42 @@ public:
     opacity_type operator()(const coord_def& p) const override;
 };
 extern const opacity_excl opc_excl;
+
+class opacity_map_default : public opacity_func
+{
+public:
+    CLONE(opacity_map_default)
+
+    opacity_type operator()(const coord_def& p) const override;
+};
+extern const opacity_map_default opc_map_default;
+
+class opacity_map_no_trans : public opacity_func
+{
+public:
+    CLONE(opacity_map_no_trans)
+
+    opacity_type operator()(const coord_def& p) const override;
+};
+extern const opacity_map_no_trans opc_map_no_trans;
+
+class opacity_map_solid : public opacity_func
+{
+public:
+    CLONE(opacity_map_solid)
+
+    opacity_type operator()(const coord_def& p) const override;
+};
+extern const opacity_map_solid opc_map_solid;
+
+class opacity_map_solid_see : public opacity_func
+{
+public:
+    CLONE(opacity_map_solid_see)
+
+    opacity_type operator()(const coord_def& p) const override;
+};
+extern const opacity_map_solid_see opc_map_solid_see;
 
 // Subclasses of this are passed to losight() to modify the
 // LOS calculation. Implementations will have to translate between

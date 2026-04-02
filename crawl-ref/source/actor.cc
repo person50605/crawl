@@ -81,17 +81,25 @@ int actor::dragon_level() const {
     return min(get_experience_level(), 18);
 }
 
-bool actor::handle_trap()
-{
-    trap_def* trap = trap_at(pos());
-    if (trap)
-        trap->trigger(*this);
-    return trap != nullptr;
-}
-
 int actor::skill_rdiv(skill_type sk, int mult, int div) const
 {
     return div_rand_round(skill(sk, mult * 256), div * 256);
+}
+
+bool actor::friendly() const
+{
+    return temp_attitude() == ATT_FRIENDLY;
+}
+
+bool actor::neutral() const
+{
+    const mon_attitude_type att = temp_attitude();
+    return att == ATT_NEUTRAL || att == ATT_GOOD_NEUTRAL;
+}
+
+bool actor::good_neutral() const
+{
+    return temp_attitude() == ATT_GOOD_NEUTRAL;
 }
 
 int actor::wearing_jewellery(int sub_type) const
@@ -193,7 +201,7 @@ void actor::shield_block_succeeded(actor *attacker)
         && (unrand_entry = get_unrand_entry(sh->unrand_idx))
         && unrand_entry->melee_effects)
     {
-        unrand_entry->melee_effects(sh, this, attacker, false, 0);
+        unrand_entry->melee_effects(sh, this, attacker, 0, nullptr);
     }
 }
 
@@ -1027,15 +1035,16 @@ void actor::collide(coord_def newpos, const actor *agent, int damage)
  * @param dmg Amount of (pre-AC) damage to apply to us (and anything we hit) if
  *            we collide with something.
  * @param source_name The name of the thing that's pushing this actor.
+ * @param source_pos The position to be knocked back from. (Defaults to cause.pos())
  * @returns True if this actor is moved from their initial position; false otherwise.
  */
 
-bool actor::knockback(const actor &cause, int dist, int dmg, string source_name)
+bool actor::knockback(const actor &cause, int dist, int dmg, string source_name, coord_def source_pos)
 {
     if (is_stationary() || resists_dislodge("being knocked back"))
         return false;
 
-    const coord_def source = cause.pos();
+    const coord_def source = source_pos.origin() ? cause.pos() : source_pos;
     const coord_def oldpos = pos();
 
     if (source == oldpos)

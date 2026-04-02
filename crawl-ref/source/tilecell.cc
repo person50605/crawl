@@ -187,7 +187,8 @@ static void _pack_shoal_waves(const coord_def &gc, crawl_view_buffer& vbuf)
                 && feat != DNGN_TREE
                 && !feat_is_statuelike(feat)
                 && feat != DNGN_GRATE
-                && feat != DNGN_RUNED_CLEAR_DOOR))
+                && feat != DNGN_RUNED_CLEAR_DOOR
+                && feat != DNGN_MALIGN_GATEWAY))
     {
         return;
     }

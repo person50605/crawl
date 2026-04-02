@@ -817,7 +817,7 @@ bool place_cloud(cloud_type cl_type, const coord_def& ctarget, int cl_range,
     }
     else if (agent && agent->is_monster())
     {
-        if (agent->as_monster()->friendly())
+        if (agent->friendly())
             whose = KC_FRIENDLY;
         else
             whose = KC_OTHER;
@@ -1366,19 +1366,31 @@ static void _actor_apply_cloud(actor *act, cloud_struct &cloud)
     if (player && cloud_max_base_damage > 0 && resist > 0)
         canned_msg(MSG_YOU_RESIST);
 
+    // Get the cloud's agent now as _actor_apply_cloud_side_effects can delete
+    // blastmotes clouds
+    actor* oppressor = cloud.agent();
+
     const beam_type cloud_flavour = _cloud2beam(cloud.type);
     if (cloud_flavour != BEAM_NONE)
-        act->expose_to_element(cloud_flavour, 7, cloud.agent());
+        act->expose_to_element(cloud_flavour, 7, oppressor);
 
     const bool side_effects =
         _actor_apply_cloud_side_effects(act, cloud, final_damage);
 
     if (!player && (side_effects || final_damage > 0))
-        behaviour_event(mons, ME_DISTURB, 0, act->pos());
+    {
+        if (oppressor && oppressor->alive())
+        {
+            // Alert the monster to the oppressor but don't give away their
+            // position.
+            behaviour_event(mons, ME_ALERT, oppressor, act->pos());
+        }
+        else
+            behaviour_event(mons, ME_DISTURB, 0, act->pos());
+    }
 
     if (final_damage)
     {
-        actor *oppressor = cloud.agent();
         const string oppr_name =
             oppressor ? " "+apostrophise(oppressor->name(DESC_THE))
                       : "";
@@ -1885,35 +1897,28 @@ static void _spread_cloud(coord_def pos, cloud_type type, int radius, int pow,
     }
 }
 
-void run_cloud_spreaders(int dur)
+bool map_cloud_spreader_marker::run(int time)
 {
-    if (!dur)
-        return;
+    if (time <= 0)
+        return false;
 
-    for (map_marker *marker : env.markers.get_all(MAT_CLOUD_SPREADER))
+    speed_increment += time;
+    int rad = min(speed_increment / speed, max_rad - 1) + 1;
+    int ratio = (speed_increment - ((rad - 1) * speed)) * 100 / speed;
+
+    if (ratio == 0)
     {
-        map_cloud_spreader_marker * const mark
-            = dynamic_cast<map_cloud_spreader_marker*>(marker);
-
-        mark->speed_increment += dur;
-        int rad = min(mark->speed_increment / mark->speed, mark->max_rad - 1) + 1;
-        int ratio = (mark->speed_increment - ((rad - 1) * mark->speed))
-                    * 100 / mark->speed;
-
-        if (ratio == 0)
-        {
-            rad--;
-            ratio = 100;
-        }
-
-        _spread_cloud(mark->pos, mark->ctype, rad, mark->duration,
-                        mark->remaining, ratio, mark->agent_mid, mark->kcat);
-        if ((rad >= mark->max_rad && ratio >= 100) || mark->remaining == 0)
-        {
-            env.markers.remove(mark);
-            break;
-        }
+        rad--;
+        ratio = 100;
     }
+
+    _spread_cloud(pos, ctype, rad, duration, remaining, ratio, agent_mid, kcat);
+
+    // If the cloud has finished spreading, tell env.markers to remove this.
+    if ((rad >= max_rad && ratio >= 100) || remaining == 0)
+        return true;
+
+    return false;
 }
 
 const cloud_tile_info& cloud_type_tile_info(cloud_type type)
@@ -2163,7 +2168,7 @@ bool chaos_affects_actor(actor* victim, actor* source)
             : source && source->as_monster()->confused_by_you() ? KILL_YOU_CONF
                                                                 : KILL_MON;
 
-        if (beam.thrower == KILL_YOU || (source && source->as_monster()->friendly()))
+        if (beam.thrower == KILL_YOU || (source && source->friendly()))
             beam.attitude = ATT_FRIENDLY;
 
         beam.source_id = source ? source->mid : MID_NOBODY;

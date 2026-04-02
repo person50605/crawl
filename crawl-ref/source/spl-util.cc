@@ -551,8 +551,11 @@ int spell_mana(spell_type which_spell, bool real_spell)
 
     if (real_spell)
     {
-        if (you.duration[DUR_ENKINDLED] && spell_can_be_enkindled(which_spell))
+        if (you.duration[DUR_ENKINDLED] && spell_can_be_enkindled(which_spell)
+            && !you.divine_exegesis)
+        {
             return 0;
+        }
 
         int cost = level;
         if (you.wearing_ego(OBJ_GIZMOS, SPGIZMO_SPELLMOTOR))
@@ -1395,7 +1398,7 @@ string spell_uselessness_reason(spell_type spell, bool temp, bool prevent,
         break;
 
     case SPELL_MALIGN_GATEWAY:
-        if (temp && !can_cast_malign_gateway())
+        if (temp && !can_cast_malign_gateway(you))
         {
             return "the dungeon can only cope with one malign gateway"
                     " at a time.";
