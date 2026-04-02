@@ -53,9 +53,14 @@ velocidad de ataque en el combate cuerpo a cuerpo cuando no se usen armas.
 También permite golpear ocasionalmente con tu mano libre de forma adicional en
 caso de poderse hacer.
 %%%%
+Invocations
+
+Las Invocaciones aumentan la probabilidad de hacer efecto de las habilidades
+divinas de ciertos dioses, y a menudo el poder de esas habilidades.
+%%%%
 Evocations
 
-La capacidad en Evocaciónes afecta la compentencia de usar cosas mágicas como las
+La capacidad en Evocaciones afecta la compentencia de usar cosas mágicas como las
 varas y otras cosas raras, aumentando la fuerza y probabilidad de éxito cuando
 usandolas.
 %%%%
