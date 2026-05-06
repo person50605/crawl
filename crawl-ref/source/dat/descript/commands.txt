@@ -1,13 +1,118 @@
 %%%%
-CMD_REST
+CMD_AUTOFIGHT
 
-Rest and heal
+Hit the closest monster
 %%%%
-CMD_REST verbose
+CMD_AUTOFIGHT verbose
 
-Rests while your health and magic regenerate. Resting is interrupted as soon
-as a hostile monster comes into view. If health and magic are both already
-full, resting will wait for 100 turns.
+Moves towards the closest hostile monster, or attacks an adjacent monster with
+your current weapon.
+%%%%
+CMD_AUTOFIGHT_NOMOVE
+
+Hit an adjacent monster
+%%%%
+CMD_AUTOFIGHT_NOMOVE verbose
+
+Attacks an adjacent monster with your current weapon.
+%%%%
+CMD_CAST_SPELL
+
+Cast a spell
+%%%%
+CMD_CAST_SPELL verbose
+
+Casts a spell.
+%%%%
+CMD_CHARACTER_DUMP
+
+Dump character's progress
+%%%%
+CMD_CHARACTER_DUMP verbose
+
+Dumps detailed information about your character into a file ‘playername.txt’ in
+the morgue directory, to peruse at your leisure. This includes main stats,
+equipment, spells, skills, notes, etc.
+%%%%
+CMD_DISPLAY_CHARACTER_STATUS
+
+Display character status
+%%%%
+CMD_DISPLAY_CHARACTER_STATUS verbose
+
+Displays details on your current movement speed, attack speed, stealth, magic
+resistance, and any currently active enchantments or status effects.
+%%%%
+CMD_DISPLAY_COMMANDS
+
+Game help
+%%%%
+CMD_DISPLAY_COMMANDS verbose
+
+Displays a list of commands.
+%%%%
+CMD_DISPLAY_INVENTORY
+
+Display the contents of your inventory
+%%%%
+CMD_DISPLAY_INVENTORY verbose
+
+Displays the contents of your inventory.
+%%%%
+CMD_DISPLAY_KNOWN_OBJECTS
+
+List discovered item types
+%%%%
+CMD_DISPLAY_MAP
+
+Enter map mode
+%%%%
+CMD_DISPLAY_MAP verbose
+
+Displays a map of the current level.
+%%%%
+CMD_DISPLAY_MUTATIONS
+
+Display mutations
+%%%%
+CMD_DISPLAY_OVERMAP
+
+Display dungeon overview
+%%%%
+CMD_DISPLAY_OVERMAP verbose
+
+Displays an overview of dungeon branch locations, discovered altars, shops and
+level annotations.
+%%%%
+CMD_DISPLAY_RELIGION
+
+Display religious status
+%%%%
+CMD_DISPLAY_RELIGION verbose
+
+Displays your god's likes and dislikes, conduct, and your current religious
+standing and divine abilities.
+%%%%
+CMD_DISPLAY_SKILLS
+
+Manage skills
+%%%%
+CMD_DROP
+
+Drop items
+%%%%
+CMD_DROP verbose
+
+Drops one or more items that you are currently holding.
+%%%%
+CMD_EDIT_PLAYER_TILE
+
+Modify the player tile
+%%%%
+CMD_EDIT_PLAYER_TILE verbose
+
+Allows you to modify the equipment and species tile displayed in the player
+doll.
 %%%%
 CMD_EXPLORE
 
@@ -31,6 +136,63 @@ encounter new items or features. Unlike CMD_EXPLORE, will treat
 explore_auto_rest as if it were false and explore_auto_rest_status as if it were
 empty.
 %%%%
+CMD_MAP_FIND_ALTAR
+
+Find altars
+%%%%
+CMD_MAP_FIND_ALTAR verbose
+
+Cycles through altars on the current level.
+%%%%
+CMD_MAP_FIND_EXCLUDED
+
+Find travel exclusion
+%%%%
+CMD_MAP_FIND_EXCLUDED verbose
+
+Cycles through travel exclusions on the current level.
+%%%%
+
+CMD_MAP_FIND_PORTAL
+
+Find shops and portals
+%%%%
+CMD_MAP_FIND_PORTAL verbose
+
+Cycles through shops and portals on the current level.
+%%%%
+CMD_MAP_FIND_STASH
+
+Find stash
+%%%%
+CMD_MAP_FIND_STASH verbose
+
+Cycles through all stashes on the current level.
+%%%%
+CMD_MAP_FIND_TRAP
+
+Find traps
+%%%%
+CMD_MAP_FIND_TRAP verbose
+
+Cycles through traps on the current level.
+%%%%
+CMD_MAP_FIND_WAYPOINT
+
+Find waypoint
+%%%%
+CMD_MAP_FIND_WAYPOINT verbose
+
+Cycles through all waypoints on the current level.
+%%%%
+CMD_GAME_MENU
+
+Show game menu
+%%%%
+CMD_GAME_MENU verbose
+
+Show the game menu
+%%%%
 CMD_INTERLEVEL_TRAVEL
 
 Travel to distant levels
@@ -40,175 +202,6 @@ CMD_INTERLEVEL_TRAVEL verbose
 Automatically travels to a chosen level or branch. Travel is interrupted by
 monsters coming into view.
 %%%%
-CMD_USE_ABILITY
-
-Use divine, innate or evokable abilities
-%%%%
-CMD_SEARCH_STASHES
-
-Search for items/features
-%%%%
-CMD_SEARCH_STASHES verbose
-
-Searches for items or features seen elsewhere, and allows you to travel to
-their location.
-%%%%
-CMD_REPLAY_MESSAGES
-
-Reread recent messages
-%%%%
-CMD_RESISTS_SCREEN
-
-Display character overview
-%%%%
-CMD_RESISTS_SCREEN verbose
-
-Displays an overview of your current resistances, abilities, equipment and
-attributes.
-%%%%
-CMD_DISPLAY_OVERMAP
-
-Display dungeon overview
-%%%%
-CMD_DISPLAY_OVERMAP verbose
-
-Displays an overview of dungeon branch locations, discovered altars, shops and
-level annotations.
-%%%%
-CMD_DISPLAY_RELIGION
-
-Display religious status
-%%%%
-CMD_DISPLAY_RELIGION verbose
-
-Displays your god's likes and dislikes, conduct, and your current religious
-standing and divine abilities.
-%%%%
-CMD_DISPLAY_MUTATIONS
-
-Display mutations
-%%%%
-CMD_DISPLAY_SKILLS
-
-Manage skills
-%%%%
-CMD_DISPLAY_CHARACTER_STATUS
-
-Display character status
-%%%%
-CMD_DISPLAY_CHARACTER_STATUS verbose
-
-Displays details on your current movement speed, attack speed, stealth, magic
-resistance, and any currently active enchantments or status effects.
-%%%%
-CMD_DISPLAY_KNOWN_OBJECTS
-
-List discovered item types
-%%%%
-CMD_SAVE_GAME_NOW
-
-Save and exit
-%%%%
-CMD_SAVE_GAME_NOW verbose
-
-Saves the game for later and exits. Once you resume the game, the save file is
-deleted again.
-%%%%
-CMD_EDIT_PLAYER_TILE
-
-Modify the player tile
-%%%%
-CMD_EDIT_PLAYER_TILE verbose
-
-Allows you to modify the equipment and species tile displayed in the player
-doll.
-%%%%
-CMD_DISPLAY_COMMANDS
-
-Game help
-%%%%
-CMD_DISPLAY_COMMANDS verbose
-
-Displays a list of commands.
-%%%%
-CMD_SHOW_CHARACTER_DUMP
-
-Dump and show character's progress
-%%%%
-CMD_SHOW_CHARACTER_DUMP verbose
-
-Dumps detailed information about your character into a file ‘playername.txt’ in
-the morgue directory, and shows the file in-game. This includes main stats,
-equipment, spells, skills, notes, etc.
-%%%%
-CMD_CHARACTER_DUMP
-
-Dump character's progress
-%%%%
-CMD_CHARACTER_DUMP verbose
-
-Dumps detailed information about your character into a file ‘playername.txt’ in
-the morgue directory, to peruse at your leisure. This includes main stats,
-equipment, spells, skills, notes, etc.
-%%%%
-CMD_AUTOFIGHT
-
-Hit the closest monster
-%%%%
-CMD_AUTOFIGHT verbose
-
-Moves towards the closest hostile monster, or attacks an adjacent monster with
-your current weapon.
-%%%%
-CMD_AUTOFIGHT_NOMOVE
-
-Hit an adjacent monster
-%%%%
-CMD_AUTOFIGHT_NOMOVE verbose
-
-Attacks an adjacent monster with your current weapon.
-%%%%
-CMD_WAIT
-
-Wait a single turn
-%%%%
-CMD_WAIT verbose
-
-Spends a single turn waiting and resting.
-%%%%
-CMD_SAFE_WAIT
-
-Wait a single turn if safe
-%%%%
-CMD_SAFE_WAIT verbose
-
-Spends a single turn waiting and resting, but only if there are no hostile
-monsters in view.
-%%%%
-CMD_DISPLAY_INVENTORY
-
-Display the contents of your inventory
-%%%%
-CMD_DISPLAY_INVENTORY verbose
-
-Displays the contents of your inventory.
-%%%%
-CMD_CAST_SPELL
-
-Cast a spell
-%%%%
-CMD_CAST_SPELL verbose
-
-Casts a spell.
-%%%%
-CMD_MEMORISE_SPELL
-
-Memorise spell
-%%%%
-CMD_MEMORISE_SPELL verbose
-
-Memorises a chosen spell from your spell library.
-%%%%
 CMD_LOOKUP_HELP
 
 Lookup help
@@ -216,42 +209,6 @@ Lookup help
 CMD_LOOKUP_HELP verbose
 
 Looks up descriptions of monsters, spells, abilities, items and more.
-%%%%
-CMD_DROP
-
-Drop items
-%%%%
-CMD_DROP verbose
-
-Drops one or more items that you are currently holding.
-%%%%
-CMD_DISPLAY_MAP
-
-Enter map mode
-%%%%
-CMD_MAP_EXIT_MAP
-
-Exit map mode
-%%%%
-CMD_DISPLAY_MAP verbose
-
-Displays a map of the current level.
-%%%%
-CMD_MAP_GOTO_TARGET
-
-Travel to cursor
-%%%%
-CMD_MAP_GOTO_TARGET verbose
-
-Starts travelling to the cursor's current location.
-%%%%
-CMD_MAP_EXPLORE
-
-Find next autoexplore target
-%%%%
-CMD_MAP_EXPLORE verbose
-
-Moves the cursor to the next location that autoexplore will travel to.
 %%%%
 CMD_MAP_ADD_WAYPOINT
 
@@ -261,6 +218,14 @@ CMD_MAP_ADD_WAYPOINT verbose
 
 Sets a waypoint at your current position.
 %%%%
+CMD_MAP_CLEAR_EXCLUDES
+
+Clear travel exclusions
+%%%%
+CMD_MAP_CLEAR_EXCLUDES verbose
+
+Erases all travel exclusions on the level.
+%%%%
 CMD_MAP_EXCLUDE_AREA
 
 Create exclusion
@@ -269,13 +234,57 @@ CMD_MAP_EXCLUDE_AREA verbose
 
 Creates a travel exclusion, changes its radius, or removes it.
 %%%%
-CMD_MAP_CLEAR_EXCLUDES
+CMD_MAP_EXIT_MAP
 
-Clear travel exclusions
+Exit map mode
 %%%%
-CMD_MAP_CLEAR_EXCLUDES verbose
+CMD_MAP_EXPLORE
 
-Erases all travel exclusions on the level.
+Find next autoexplore target
+%%%%
+CMD_MAP_EXPLORE verbose
+
+Moves the cursor to the next location that autoexplore will travel to.
+%%%%
+CMD_MAP_FIND_DOWNSTAIR
+
+Find stairs down
+%%%%
+CMD_MAP_FIND_DOWNSTAIR verbose
+
+Cycles through stairs down.
+%%%%
+CMD_MAP_FIND_UPSTAIR
+
+Find stairs up
+%%%%
+CMD_MAP_FIND_UPSTAIR verbose
+
+Cycles through stairs up.
+%%%%
+CMD_MAP_FIND_YOU
+
+Find me
+%%%%
+CMD_MAP_FIND_YOU verbose
+
+Moves the map cursor back to your current position.
+%%%%
+CMD_MAP_GOTO_LEVEL
+
+Go to level
+%%%%
+CMD_MAP_GOTO_LEVEL verbose
+
+Displays another chosen level by branch and depth.
+%%%%
+CMD_MAP_GOTO_TARGET
+
+Travel to cursor
+%%%%
+CMD_MAP_GOTO_TARGET verbose
+
+Starts travelling to the cursor's current location.
 %%%%
 CMD_MAP_NEXT_LEVEL
 
@@ -293,85 +302,124 @@ CMD_MAP_PREV_LEVEL verbose
 
 Displays the next higher level.
 %%%%
-CMD_MAP_GOTO_LEVEL
 
-Go to level
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CMD_MEMORISE_SPELL
+
+Memorise spell
 %%%%
-CMD_MAP_GOTO_LEVEL verbose
+CMD_MEMORISE_SPELL verbose
 
-Displays another chosen level by branch and depth.
+Memorises a chosen spell from your spell library.
 %%%%
-CMD_MAP_FIND_UPSTAIR
+CMD_REPLAY_MESSAGES
 
-Find stairs up
+Reread recent messages
 %%%%
-CMD_MAP_FIND_UPSTAIR verbose
+CMD_RESISTS_SCREEN
 
-Cycles through stairs up.
+Display character overview
 %%%%
-CMD_MAP_FIND_DOWNSTAIR
+CMD_RESISTS_SCREEN verbose
 
-Find stairs down
+Displays an overview of your current resistances, abilities, equipment and
+attributes.
 %%%%
-CMD_MAP_FIND_DOWNSTAIR verbose
+CMD_REST
 
-Cycles through stairs down.
+Rest and heal
 %%%%
-CMD_MAP_FIND_YOU
+CMD_REST verbose
 
-Find me
+Rests while your health and magic regenerate. Resting is interrupted as soon
+as a hostile monster comes into view. If health and magic are both already
+full, resting will wait for 100 turns.
 %%%%
-CMD_MAP_FIND_YOU verbose
+CMD_SAFE_WAIT
 
-Moves the map cursor back to your current position.
+Wait a single turn if safe
 %%%%
-CMD_MAP_FIND_PORTAL
+CMD_SAFE_WAIT verbose
 
-Find shops and portals
+Spends a single turn waiting and resting, but only if there are no hostile
+monsters in view.
 %%%%
-CMD_MAP_FIND_PORTAL verbose
+CMD_SAVE_GAME_NOW
 
-Cycles through shops and portals on the current level.
+Save and exit
 %%%%
-CMD_MAP_FIND_TRAP
+CMD_SAVE_GAME_NOW verbose
 
-Find traps
+Saves the game for later and exits. Once you resume the game, the save file is
+deleted again.
 %%%%
-CMD_MAP_FIND_TRAP verbose
+CMD_SEARCH_STASHES
 
-Cycles through traps on the current level.
+Search for items/features
 %%%%
-CMD_MAP_FIND_ALTAR
+CMD_SEARCH_STASHES verbose
 
-Find altars
+Searches for items or features seen elsewhere, and allows you to travel to
+their location.
 %%%%
-CMD_MAP_FIND_ALTAR verbose
+CMD_SHOW_CHARACTER_DUMP
 
-Cycles through altars on the current level.
+Dump and show character's progress
 %%%%
-CMD_MAP_FIND_EXCLUDED
+CMD_SHOW_CHARACTER_DUMP verbose
 
-Find travel exclusion
+Dumps detailed information about your character into a file ‘playername.txt’ in
+the morgue directory, and shows the file in-game. This includes main stats,
+equipment, spells, skills, notes, etc.
 %%%%
-CMD_MAP_FIND_EXCLUDED verbose
+CMD_TOGGLE_KEYBOARD
 
-Cycles through travel exclusions on the current level.
+Toggle keyboard
 %%%%
-CMD_MAP_FIND_WAYPOINT
+CMD_TOGGLE_KEYBOARD verbose
 
-Find waypoint
+Toggles the on-screen keyboard visibility.
 %%%%
-CMD_MAP_FIND_WAYPOINT verbose
+CMD_USE_ABILITY
 
-Cycles through all waypoints on the current level.
+Use divine, innate or evokable abilities
 %%%%
-CMD_MAP_FIND_STASH
+CMD_WAIT
 
-Find stash
+Wait a single turn
 %%%%
-CMD_MAP_FIND_STASH verbose
+CMD_WAIT verbose
 
-Cycles through all stashes on the current level.
+Spends a single turn waiting and resting.
 %%%%
 CMD_ZOOM_IN
 
@@ -388,19 +436,3 @@ Zoom out
 CMD_ZOOM_OUT verbose
 
 Zooms out on dungeon area.
-%%%%
-CMD_TOGGLE_KEYBOARD
-
-Toggle keyboard
-%%%%
-CMD_TOGGLE_KEYBOARD verbose
-
-Toggles the on-screen keyboard visibility.
-%%%%
-CMD_GAME_MENU
-
-Show game menu
-%%%%
-CMD_GAME_MENU verbose
-
-Show the game menu
