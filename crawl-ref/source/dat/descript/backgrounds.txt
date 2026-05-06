@@ -4,6 +4,11 @@ Air Elementalist
 Air Elementalists have learned the Shock spell. Their electrical magic can harm
 groups of foes, while their air spells assist in fighting or fleeing enemies.
 %%%%
+Alchemist
+
+Alchemists start with the Poisonous Vapours spell, and their magic is very
+effective against foes susceptible to poison.
+%%%%
 Artificer
 
 Artificers start with a few magic wands and a club. They'll need to find better
@@ -58,6 +63,11 @@ Fire Elementalist
 Fire Elementalists have learned the Foxfire spell. Their other starting spells
 are likewise focused on fiery and explosive destruction.
 %%%%
+Forgewright
+
+Forgewrights are mages who specialise in the creation of turrets and mechanical
+companions to fight alongside.
+%%%%
 Gladiator
 
 Gladiators are ready for the arena with light armour, a weapon of their choice,
@@ -103,20 +113,10 @@ Summoner
 Summoners are able to cast Summon Small Mammal from the start, and begin with
 spells to summon stronger and more exotic allies in their library.
 %%%%
-Forgewright
-
-Forgewrights are mages who specialise in the creation of turrets and mechanical
-companions to fight alongside.
-%%%%
 Shapeshifter
 
 Shapeshifters use talismans to shift their form, making them powerful melee
 fighters (especially when unarmed) at the cost of armour.
-%%%%
-Alchemist
-
-Alchemists start with the Poisonous Vapours spell, and their magic is very
-effective against foes susceptible to poison.
 %%%%
 Wanderer
 
