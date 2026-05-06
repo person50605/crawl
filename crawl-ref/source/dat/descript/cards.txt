@@ -1,21 +1,17 @@
 %%%%
 # Escape
-Velocity card
+the Cloud card
 
-The card depicts an empty, well-worn pair of boots. Sand, ashes, and turf
-coat the boots' soles.
+The card depicts an iron gate enshrouded in mist.
 
-Drawing this card can grant great speed to allies or terrible slowness to foes.
+Drawing this card enshrouds the user's foes in rings of detrimental clouds. The
+effects of such clouds will vary with card power.
 %%%%
-the Tomb card
+the Elixir card
 
-The card depicts a royal crypt, its entrance sealed by a heavy stone slab.
+The card depicts a smug smile formed out of nine chalices.
 
-Drawing this card entombs its user in protective, temporary walls of solid rock.
-At lower power levels or with adjacent creatures, the tomb may be imperfect.
-
-The tomb is sustained by the presence of its creator within it, and moving from
-the centre of the tomb will cause its walls to crumble away.
+Drawing this card rapidly restores the user's health and magic.
 %%%%
 Exile card
 
@@ -33,25 +29,43 @@ them.
 Drawing this card will create a shaft beneath the user, and possibly beneath
 their enemies.
 %%%%
-the Elixir card
+the Tomb card
 
-The card depicts a smug smile formed out of nine chalices.
+The card depicts a royal crypt, its entrance sealed by a heavy stone slab.
 
-Drawing this card rapidly restores the user's health and magic.
+Drawing this card entombs its user in protective, temporary walls of solid rock.
+At lower power levels or with adjacent creatures, the tomb may be imperfect.
+
+The tomb is sustained by the presence of its creator within it, and moving from
+the centre of the tomb will cause its walls to crumble away.
 %%%%
-the Cloud card
+Velocity card
 
-The card depicts an iron gate enshrouded in mist.
+The card depicts an empty, well-worn pair of boots. Sand, ashes, and turf
+coat the boots' soles.
 
-Drawing this card enshrouds the user's foes in rings of detrimental clouds. The
-effects of such clouds will vary with card power.
+Drawing this card can grant great speed to allies or terrible slowness to foes.
 %%%%
 # Destruction
-Vitriol card
+Degeneration card
 
-The card depicts an oklob plant, dripping with its distinctive corrosive sap.
+The card depicts a dragon whose scales are sloughing off, revealing a sheep
+underneath.
 
-Drawing this card will unleash a corrosive attack spell.
+Drawing this card will attempt to polymorph and malmutate nearby enemies into
+weaker forms, and will briefly daze those that cannot be polymorphed.
+%%%%
+the Orb card
+
+The card depicts a figure surrounded by floating, glowing orbs of energy.
+
+Drawing this card unleashes one or possibly more destructive orbs of pure magic.
+%%%%
+Pain card
+
+The card depicts an iron wheel, menacing with spikes and rusted with blood.
+
+Drawing this card unleashes a necromantic attack spell.
 %%%%
 the Storm card
 
@@ -61,25 +75,11 @@ Drawing this card unleashes a storm of wind and electrical discharges.
 Increasing card power will result in a stronger wind force and stronger, more
 numerous discharges.
 %%%%
-Pain card
+Vitriol card
 
-The card depicts an iron wheel, menacing with spikes and rusted with blood.
+The card depicts an oklob plant, dripping with its distinctive corrosive sap.
 
-Drawing this card unleashes a necromantic attack spell.
-%%%%
-the Orb card
-
-The card depicts a figure surrounded by floating, glowing orbs of energy.
-
-Drawing this card unleashes one or possibly more destructive orbs of pure magic.
-%%%%
-Degeneration card
-
-The card depicts a dragon whose scales are sloughing off, revealing a sheep
-underneath.
-
-Drawing this card will attempt to polymorph and malmutate nearby enemies into
-weaker forms, and will briefly daze those that cannot be polymorphed.
+Drawing this card will unleash a corrosive attack spell.
 %%%%
 Wild Magic card
 
@@ -88,21 +88,8 @@ The card depicts a pointy wizard's hat, scorched and resting on a pile of ashes.
 Drawing this card causes wild magic (as if from miscasting a spell) to act upon
 its user's enemies. Each creature affected will restore some of the user's
 magic.
+%%%%
 # Summoning
-%%%%
-the Elements card
-
-The card depicts the figures of great beasts lurking in a sandstorm.
-
-Drawing this card will summon three beasts of the four elements.
-%%%%
-the Pentagram card
-
-The card depicts cultists marking out a ritual pentagram on the floor.
-
-Drawing this card will summon a pair of demons to the user's aid. There is a
-small chance one of the demons will be hostile.
-%%%%
 the Dance card
 
 The card depicts an extravagantly-dressed, masked figure dancing alone in a
@@ -111,18 +98,11 @@ vast room.
 Drawing this card will summon a dancing weapon. Its quality, brand, and
 friendliness are all affected by card power.
 %%%%
-the Swarm card
+the Elements card
 
-The card depicts a bear surrounded by a swarm of bees. It hums ominously.
+The card depicts the figures of great beasts lurking in a sandstorm.
 
-Drawing this card will summon bees.
-%%%%
-the Rangers card
-
-The card depicts an arrow in a bull's-eye, which has been split by a second
-arrow.
-
-Drawing this card will summon several archers.
+Drawing this card will summon three beasts of the four elements.
 %%%%
 the Illusion card
 
@@ -132,20 +112,27 @@ reflections.
 Drawing this card will summon an illusion of the user. Its power will depend
 upon one's own.
 %%%%
+the Pentagram card
+
+The card depicts cultists marking out a ritual pentagram on the floor.
+
+Drawing this card will summon a pair of demons to the user's aid. There is a
+small chance one of the demons will be hostile.
+%%%%
+the Rangers card
+
+The card depicts an arrow in a bull's-eye, which has been split by a second
+arrow.
+
+Drawing this card will summon several archers.
+%%%%
+the Swarm card
+
+The card depicts a bear surrounded by a swarm of bees. It hums ominously.
+
+Drawing this card will summon bees.
+%%%%
 # Punishment
-Wrath card
-
-The card depicts the hand of the divine, reaching down from the heavens to hurl
-furious lightning.
-
-Drawing this card will draw a god's wrath against the user.
-%%%%
-the Wraith card
-
-The card depicts absolutely nothing.
-
-Drawing this card will drain the user.
-%%%%
 the Swine card
 
 The card depicts several feral hogs wallowing in a mud pit.
@@ -157,6 +144,19 @@ Torment card
 The card depicts a screaming figure being tortured on the rack.
 
 Drawing this card will cause agonising injury to the user.
+%%%%
+the Wraith card
+
+The card depicts absolutely nothing.
+
+Drawing this card will drain the user.
+%%%%
+Wrath card
+
+The card depicts the hand of the divine, reaching down from the heavens to hurl
+furious lightning.
+
+Drawing this card will draw a god's wrath against the user.
 %%%%
 # buggy cards
 a buggy card
