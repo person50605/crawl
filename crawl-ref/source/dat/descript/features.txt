@@ -155,6 +155,11 @@ The floor
 
 The floor.
 %%%%
+The open sea
+
+An expanse of endless wind and waves, with not a lighthouse in sight. Anyone
+venturing across it would be lost beyond all hope in short order.
+%%%%
 Some deep water
 
 A pool of deep water. Only giant creatures can wade through this, and only
@@ -165,6 +170,10 @@ Some lava
 
 An intensely hot pool of molten rock, emitting clouds of sulphurous smoke.
 Nothing but the mythical salamander can cross this without flight.
+%%%%
+Some mud
+
+A thick layer of gritty mud. [[liquefied]]
 %%%%
 Some shallow water
 
@@ -183,28 +192,37 @@ Non-swimmers must wade through the water slowly and will occasionally fail to
 attack in melee when wading through shallow water; although large creatures are
 able to keep their balance, move at a normal speed, and avoid fumbling.
 %%%%
-Some mud
-
-A thick layer of gritty mud. [[liquefied]]
-%%%%
-The open sea
-
-An expanse of endless wind and waves, with not a lighthouse in sight. Anyone
-venturing across it would be lost beyond all hope in short order.
-%%%%
-An unnaturally hard rock wall
-
-A wall imbued with magic that makes it indestructible.
-%%%%
-A wall of the weird stuff which makes up Pandemonium
-
-A wall made from the weird stuff which makes up Pandemonium. It seems to be
-like rock in most other aspects.
-%%%%
+########################################################################
+### Walls
+########################################################################
 A crystal wall
 
 A wall made from polished crystal and imbued with arcane magics. They prevent
 its easy destruction, and make it reflect heat and cold.
+%%%%
+A frigid wall
+
+A wall that radiates a chill so intense it can damage enemies which stand next
+to it.
+%%%%
+A metal wall
+
+A wall of shiny grey metal. As every dungeon electrician knows, it will ground
+even magical bolts of lightning.
+%%%%
+A rock wall
+
+A wall consisting of simple rock.
+%%%%
+A slime covered rock wall
+
+A rock wall coated with acidic green slime; just standing near it is enough to
+cause temporary corrosion.
+%%%%
+A stone wall
+
+A harder obstacle than rock walls. Only the mightiest magic can shatter stone
+walls.
 %%%%
 A translucent rock wall
 
@@ -221,48 +239,114 @@ A translucent unnaturally hard rock wall
 A wall imbued with magic that not only makes it indestructible but also makes
 it translucent like glass.
 %%%%
-A stone wall
+An unnaturally hard rock wall
 
-A harder obstacle than rock walls. Only the mightiest magic can shatter stone
-walls.
+A wall imbued with magic that makes it indestructible.
 %%%%
-A slime covered rock wall
+A wall of the weird stuff which makes up Pandemonium
 
-A rock wall coated with acidic green slime; just standing near it is enough to
-cause temporary corrosion.
-%%%%
-A metal wall
-
-A wall of shiny grey metal. As every dungeon electrician knows, it will ground
-even magical bolts of lightning.
-%%%%
-A rock wall
-
-A wall consisting of simple rock.
-%%%%
-A frigid wall
-
-A wall that radiates a chill so intense it can damage enemies which stand next
-to it.
+A wall made from the weird stuff which makes up Pandemonium. It seems to be
+like rock in most other aspects.
 %%%%
 ########################################################################
 ### Features
 ########################################################################
-A shop
+An abandoned shop
 
-A shop in the dungeon, beyond sight of the world above, manned by a secretive
-and reclusive shopkeeper who cannot be bargained with, grants no refunds, and
-is interested in nothing you may have to sell. Some shops hawk antiques of
-unknown provenance, and offer little hint as to the quality or nature of their
-goods.
+A shop that has been abandoned.
 %%%%
-A stone staircase leading down
+# column_ruins
+A broken pillar
 
-A staircase leading further down.
+A ruined and crumbled stone pillar.
 %%%%
-A stone staircase leading up
+A cache of baked goods
 
-A staircase leading back up.
+A hoard of breadstuffs, baked and fried from minor divine gifts of flour and
+growth cultures, granted extended shelflife through sacred succour. You already
+carry as much food as you will ever need for this journey, but a light snack
+shouldn't hurt.
+%%%%
+A cache of fruit
+
+A pile of assorted fruit, ranging from common dungeon staples like chokos and
+snozzcumbers, to rarer treats such as apples and oranges. You already carry as
+much food as you will ever need for this journey, but the occasional nibble
+wouldn't hurt.
+%%%%
+A cache of meat
+
+A stash of preserved meats of varied origins and preparations: strips of jerky,
+lumpy smoked sausages, and indeterminate protein rations. You already carry as
+much food as you will ever need for this journey, but this could offer the rare
+chance to try out yak...
+%%%%
+A demonic tree
+
+A tree hideously warped by the demonic forces of chaos. Despite its bizarre
+appearance and occasional, unsettling movement, it seems harmless.
+%%%%
+# mmap/antennae/etc
+A detected shop or portal
+
+A gateway of some kind. You cannot tell where it leads without approaching it.
+%%%%
+A dry fountain
+
+A dried-up decorative fountain that has seen better days.
+%%%%
+An empty arch of ancient stone
+
+A stone archway that seems to lead to nowhere in particular.
+%%%%
+an empty mutation catalyst
+
+A complex arcane still, cracked open and fully emptied of its contents.
+%%%%
+An escape hatch in the ceiling
+
+A spring-loaded one-way escape hatch set in the ceiling.
+%%%%
+An escape hatch in the floor
+
+A spring-loaded one-way escape hatch set in the dungeon floor, allowing the
+adventurer beset by adversaries to exchange the perils of this level for the
+perils of the next.
+%%%%
+A fountain of blood
+
+A decorative fountain, spurting with foul-looking blood.
+%%%%
+A fountain of clear blue water
+
+A decorative fountain, flowing with clear water.
+%%%%
+A fountain of eyes
+
+A decorative fountain, bubbling over with listless and unmoving eyes.
+%%%%
+A fountain of sparkling water
+
+A decorative fountain, flowing with brightly sparkling, faintly magic water.
+%%%%
+A gleaming silver wall
+
+A wall made of pure silver, formed by the power of Zin to temporarily imprison
+a monster within its confines.
+%%%%
+A granite statue
+
+A stone statue whose features have long since withered away.
+%%%%
+An iron grate
+
+A rusted iron grate, brittle enough to be disrupted with a spell or a wand
+quite easily. It is too strong to be breakable by hand, however.
+%%%%
+A mangrove
+
+This tree is specially adapted for growing in swampy conditions. Its vines are
+too thick to see through.
 %%%%
 # For the Vaults:5 staircases in and out.
 A metal staircase leading down
@@ -276,6 +360,82 @@ A metal staircase leading up
 A staircase leading up from the grand vaults containing the silver rune of Zot,
 whose wealth attracts the most powerful champions from across the Dungeon to its
 defence.
+%%%%
+A one-way staircase leading down
+
+A cursed staircase leading further down, imbued with magic to prevent any
+return back up the stairs. Adventurers taking this passage will need to find a
+return stairway somewhere else on the level where they arrive.
+%%%%
+A one-way staircase leading up
+
+A cursed staircase leading up, imbued with magic to prevent any return back
+down the stairs. Adventurers taking this passage will need to find a return
+stairway somewhere else on the level where they arrive.
+%%%%
+The orb dais
+
+A raised pedestal upon which rests the fabled Orb of Zot. More ancient than even
+the dungeon itself, it cannot be destroyed or transformed by any means.
+%%%%
+An orcish idol
+
+An idol of the orc god Beogh.
+%%%%
+A passage of Golubria
+
+An unstable gateway that allows instantaneous travel to another nearby passage
+of Golubria, and will close behind anything passing through it.
+%%%%
+A patch of mould
+
+A dense carpet of colourful mould, rustling with fecundity. The towering fungi
+which sprout from it can grow back in the blink of an eye, no matter how many
+times they are cut down.
+%%%%
+A petrified tree
+
+An ancient tree, long ago passed from biology into geology. While no longer
+wooden in a material sense, it retains the spiritual qualities of a tree.
+%%%%
+A portal to somewhere
+
+A gash-like tear in reality that looks into some terrifying, starry otherworld.
+Thankfully, the magic that opened it also prevents its vacuum from consuming
+and swallowing everything in sight.
+%%%%
+a purified mutation catalyst
+
+An experimental arcane still, brewing some incomplete- if refined- mutagenic
+serum. Breaking this open will bathe you in mystic mists, imparting upon you one
+beneficial mutation (excluding those that could restrict equipment slots).
+%%%%
+A runelight
+
+An unearthly, glittering light, floating and twisting in midair. A Rune of
+Zot is surely nearby, its power overspilling to cause this spectacular sight.
+%%%%
+A sealed passage leading down
+
+A descending passage sealed tightly by a magical barricade. It is impossible to
+climb through it so long as the magic holds.
+%%%%
+A sealed passage leading up
+
+An ascending passage sealed tightly by a magical barricade. It is impossible to
+climb through it so long as the magic holds.
+%%%%
+A shaft
+
+A hole in the ground, leading to a dungeon level one or more floors deeper.
+%%%%
+A shop
+
+A shop in the dungeon, beyond sight of the world above, manned by a secretive
+and reclusive shopkeeper who cannot be bargained with, grants no refunds, and
+is interested in nothing you may have to sell. Some shops hawk antiques of
+unknown provenance, and offer little hint as to the quality or nature of their
+goods.
 %%%%
 A slimy stone staircase leading down
 
@@ -309,160 +469,10 @@ A stone staircase leading back up.
     end
 }}
 %%%%
-A tree
+A statue of an orb of entropy
 
-A large tree. While in most places the dim light of the dungeon is not bright
-enough to sustain large plants, there are spots where, with the grace of
-Fedhas, trees as big as those on the surface can grow underground.
-%%%%
-A mangrove
-
-This tree is specially adapted for growing in swampy conditions. Its vines are
-too thick to see through.
-%%%%
-A demonic tree
-
-A tree hideously warped by the demonic forces of chaos. Despite its bizarre
-appearance and occasional, unsettling movement, it seems harmless.
-%%%%
-A petrified tree
-
-An ancient tree, long ago passed from biology into geology. While no longer
-wooden in a material sense, it retains the spiritual qualities of a tree.
-%%%%
-An abandoned shop
-
-A shop that has been abandoned.
-%%%%
-An orcish idol
-
-An idol of the orc god Beogh.
-%%%%
-An iron grate
-
-A rusted iron grate, brittle enough to be disrupted with a spell or a wand
-quite easily. It is too strong to be breakable by hand, however.
-%%%%
-An escape hatch in the floor
-
-A spring-loaded one-way escape hatch set in the dungeon floor, allowing the
-adventurer beset by adversaries to exchange the perils of this level for the
-perils of the next.
-%%%%
-An escape hatch in the ceiling
-
-A spring-loaded one-way escape hatch set in the ceiling.
-%%%%
-A shaft
-
-A hole in the ground, leading to a dungeon level one or more floors deeper.
-%%%%
-A sealed passage leading down
-
-A descending passage sealed tightly by a magical barricade. It is impossible to
-climb through it so long as the magic holds.
-%%%%
-A sealed passage leading up
-
-An ascending passage sealed tightly by a magical barricade. It is impossible to
-climb through it so long as the magic holds.
-%%%%
-An empty arch of ancient stone
-
-A stone archway that seems to lead to nowhere in particular.
-%%%%
-# mmap/antennae/etc
-A detected shop or portal
-
-A gateway of some kind. You cannot tell where it leads without approaching it.
-%%%%
-A passage of Golubria
-
-An unstable gateway that allows instantaneous travel to another nearby passage
-of Golubria, and will close behind anything passing through it.
-%%%%
-A portal to somewhere
-
-A gash-like tear in reality that looks into some terrifying, starry otherworld.
-Thankfully, the magic that opened it also prevents its vacuum from consuming
-and swallowing everything in sight.
-%%%%
-A granite statue
-
-A stone statue whose features have long since withered away.
-%%%%
-A gleaming silver wall
-
-A wall made of pure silver, formed by the power of Zin to temporarily imprison
-a monster within its confines.
-%%%%
-A dry fountain
-
-A dried-up decorative fountain that has seen better days.
-%%%%
-A fountain of clear blue water
-
-A decorative fountain, flowing with clear water.
-%%%%
-A fountain of blood
-
-A decorative fountain, spurting with foul-looking blood.
-%%%%
-A fountain of eyes
-
-A decorative fountain, bubbling over with listless and unmoving eyes.
-%%%%
-A fountain of sparkling water
-
-A decorative fountain, flowing with brightly sparkling, faintly magic water.
-%%%%
-A cache of baked goods
-
-A hoard of breadstuffs, baked and fried from minor divine gifts of flour and
-growth cultures, granted extended shelflife through sacred succour. You already
-carry as much food as you will ever need for this journey, but a light snack
-shouldn't hurt.
-%%%%
-A cache of fruit
-
-A pile of assorted fruit, ranging from common dungeon staples like chokos and
-snozzcumbers, to rarer treats such as apples and oranges. You already carry as
-much food as you will ever need for this journey, but the occasional nibble
-wouldn't hurt.
-%%%%
-A cache of meat
-
-A stash of preserved meats of varied origins and preparations: strips of jerky,
-lumpy smoked sausages, and indeterminate protein rations. You already carry as
-much food as you will ever need for this journey, but this could offer the rare
-chance to try out yak...
-%%%%
-A runelight
-
-An unearthly, glittering light, floating and twisting in midair. A Rune of
-Zot is surely nearby, its power overspilling to cause this spectacular sight.
-%%%%
-# column_ruins
-A broken pillar
-
-A ruined and crumbled stone pillar.
-%%%%
-A one-way staircase leading down
-
-A cursed staircase leading further down, imbued with magic to prevent any
-return back up the stairs. Adventurers taking this passage will need to find a
-return stairway somewhere else on the level where they arrive.
-%%%%
-A one-way staircase leading up
-
-A cursed staircase leading up, imbued with magic to prevent any return back
-down the stairs. Adventurers taking this passage will need to find a return
-stairway somewhere else on the level where they arrive.
-%%%%
-The orb dais
-
-A raised pedestal upon which rests the fabled Orb of Zot. More ancient than even
-the dungeon itself, it cannot be destroyed or transformed by any means.
+A statue of a terrifying globe of profound nothingness, said to dwell within the
+Realm of Zot.
 %%%%
 A statue of an orb of fire
 
@@ -474,26 +484,19 @@ A statue of an orb of winter
 A statue of a terrifying globe of uttermost cold, said to dwell within the
 Realm of Zot.
 %%%%
-A statue of an orb of entropy
+A stone staircase leading down
 
-A statue of a terrifying globe of profound nothingness, said to dwell within the
-Realm of Zot.
+A staircase leading further down.
 %%%%
-A patch of mould
+A stone staircase leading up
 
-A dense carpet of colourful mould, rustling with fecundity. The towering fungi
-which sprout from it can grow back in the blink of an eye, no matter how many
-times they are cut down.
+A staircase leading back up.
 %%%%
-a purified mutation catalyst
+A tree
 
-An experimental arcane still, brewing some incomplete- if refined- mutagenic
-serum. Breaking this open will bathe you in mystic mists, imparting upon you one
-beneficial mutation (excluding those that could restrict equipment slots).
-%%%%
-an empty mutation catalyst
-
-A complex arcane still, cracked open and fully emptied of its contents.
+A large tree. While in most places the dim light of the dungeon is not bright
+enough to sustain large plants, there are spots where, with the grace of
+Fedhas, trees as big as those on the surface can grow underground.
 %%%%
 ########################################################################
 ### Branch entrances and exits
@@ -577,7 +580,6 @@ A gateway leading out of Cocytus
 
 <A gateway leading out of Gehenna>
 %%%%
-
 A hole to the Spider Nest
 
 A passage leading to the Spider Nest.
@@ -935,62 +937,11 @@ effects against you, but your allies will avoid stepping on it.
 ########################################################################
 ### Portal vault entrances
 ########################################################################
-A flagged portal
+# These should get custom names instead. Currently used by: IceCv, Ossuary,
+# Sewer, Trove, Volcano.
+A collapsed entrance
 
-A portal leading to a bailey, gradually fading away as the standard is lowered
-to the ground.
-%%%%
-A gauntlet entrance
-
-A portal leading to a gauntlet.
-%%%%
-# timed bazaar
-A flickering gateway to a bazaar
-
-A portal leading to a bazaar, where itinerant merchants gather to sell their
-wares. They never stay in one place for very long.
-%%%%
-# permanent bazaar
-A gateway to a bazaar
-
-A portal leading to a bazaar, where itinerant merchants gather to sell their
-wares. They will wait for you, but once you get a chance to browse their
-inventory, the merchants will depart in search of other customers.
-%%%%
-A phantasmal passage
-
-A portal leading to one of many Necropolis repositories, where the freshly slain
-and deeply resentful are sealed away. This wandering rift will eventually move
-elsewhere to receive further dead.
-%%%%
-A frozen archway
-
-A portal leading to an ice cave. The archway is gradually melting away.
-%%%%
-A glacial archway
-
-A portal leading to a glacial chasm, far more dangerous than the icy caverns
-found in the shallower reaches of the Dungeon. The archway is gradually melting
-away.
-%%%%
-A sand-covered staircase
-
-A staircase leading to an ossuary. Sand is continuously pouring onto it,
-gradually blocking the entrance.
-%%%%
-A glowing drain
-
-A passage leading to a sewer. It is gradually rusting away.
-%%%%
-A portal to a secret trove of treasure
-
-A portal leading to a treasure trove. This portal is unstable and will collapse
-after a single use.
-%%%%
-A dark tunnel
-
-A portal leading to the heart of a volcano. Rocks are falling from the roof and
-sides of the tunnel, filling the entry.
+A collapsed passage which cannot be used anymore.
 %%%%
 A crumbling gateway
 
@@ -999,20 +950,71 @@ contain the evils sealed therein. Whatever protections this arch once offered
 have finally succumbed to the ravages of time, and a bitter breeze pours forth
 from the distant land beyond.
 %%%%
-A mutagenic drain
+A dark tunnel
 
-A passage leading to a gutter gulch, gradually rusting away. Entering it will
-inflict three temporary mutations upon you, or decompose you if you're undead.
+A portal leading to the heart of a volcano. Rocks are falling from the roof and
+sides of the tunnel, filling the entry.
+%%%%
+A flagged portal
+
+A portal leading to a bailey, gradually fading away as the standard is lowered
+to the ground.
+%%%%
+# timed bazaar
+A flickering gateway to a bazaar
+
+A portal leading to a bazaar, where itinerant merchants gather to sell their
+wares. They never stay in one place for very long.
+%%%%
+A frozen archway
+
+A portal leading to an ice cave. The archway is gradually melting away.
+%%%%
+# permanent bazaar
+A gateway to a bazaar
+
+A portal leading to a bazaar, where itinerant merchants gather to sell their
+wares. They will wait for you, but once you get a chance to browse their
+inventory, the merchants will depart in search of other customers.
+%%%%
+A gauntlet entrance
+
+A portal leading to a gauntlet.
+%%%%
+A glacial archway
+
+A portal leading to a glacial chasm, far more dangerous than the icy caverns
+found in the shallower reaches of the Dungeon. The archway is gradually melting
+away.
+%%%%
+A glowing drain
+
+A passage leading to a sewer. It is gradually rusting away.
 %%%%
 A magical portal
 
 A portal leading to a wizard's laboratory. It is fading away.
 %%%%
-# These should get custom names instead. Currently used by: IceCv, Ossuary,
-# Sewer, Trove, Volcano.
-A collapsed entrance
+A mutagenic drain
 
-A collapsed passage which cannot be used anymore.
+A passage leading to a gutter gulch, gradually rusting away. Entering it will
+inflict three temporary mutations upon you, or decompose you if you're undead.
+%%%%
+A phantasmal passage
+
+A portal leading to one of many Necropolis repositories, where the freshly slain
+and deeply resentful are sealed away. This wandering rift will eventually move
+elsewhere to receive further dead.
+%%%%
+A portal to a secret trove of treasure
+
+A portal leading to a treasure trove. This portal is unstable and will collapse
+after a single use.
+%%%%
+A sand-covered staircase
+
+A staircase leading to an ossuary. Sand is continuously pouring onto it,
+gradually blocking the entrance.
 %%%%
 ########################################################################
 ### Portal redefinitions
@@ -1511,11 +1513,22 @@ A way out of the dungeon, letting you finish this lesson.
 ########################################################################
 ### Area effects
 ########################################################################
+disjunction haloed
+
+This area is bathed in translocational energy, causing creatures to blink away
+from the originator of the energy with an increasing chance the closer they are
+to the caster.
+%%%%
 haloed
 
 This area is lit by a divine halo, decreasing your stealth, preventing
 invisibility, and increasing the accuracy of attacks against any illuminated
 creatures.
+%%%%
+liquefied
+
+The ground here is liquefied, making movement slow and causing any attempts to
+attack in melee to sometimes fail.
 %%%%
 umbraed
 
@@ -1523,20 +1536,20 @@ This area is wreathed by an umbra, improving your stealth if you are attuned to
 the shadows, and decreasing the accuracy of attacks by those unattuned to the
 shadows.
 %%%%
-liquefied
-
-The ground here is liquefied, making movement slow and causing any attempts to
-attack in melee to sometimes fail.
-%%%%
-disjunction haloed
-
-This area is bathed in translocational energy, causing creatures to blink away
-from the originator of the energy with an increasing chance the closer they are
-to the caster.
-%%%%
 ########################################################################
 ### Other effects
 ########################################################################
+awoken
+
+This tree has been temporarily enchanted to grant it some limited motility,
+allowing it to lash out out at any adjacent enemies of the creature who awoke
+it.
+%%%%
+demonic tree burning
+
+It is susceptible to bolts of lightning and to sufficiently intense sources of
+fire. Burning this tree releases a cloud of pure chaos instead of flames.
+%%%%
 ice covered
 
 This wall is covered in magical ice that freezes victims who wander nearby.
@@ -1546,25 +1559,14 @@ creatures. Each victim is only ever affected by one icy wall at a time.
 The creator of this icy covering and any of their allies can walk safely past
 this wall.
 %%%%
-awoken
-
-This tree has been temporarily enchanted to grant it some limited motility,
-allowing it to lash out out at any adjacent enemies of the creature who awoke
-it.
-%%%%
-tree burning
-
-It is susceptible to bolts of lightning and to sufficiently intense sources of
-fire. The resulting blaze can flare up, spreading to areas nearby and igniting
-other trees.
-%%%%
 mangrove burning
 
 It is susceptible to bolts of lightning and to sufficiently intense sources of
 fire. Mangroves do not burn as vigorously as normal trees, due to growing on
 swampy terrain, and leave behind shallow water after they smoulder.
 %%%%
-demonic tree burning
+tree burning
 
 It is susceptible to bolts of lightning and to sufficiently intense sources of
-fire. Burning this tree releases a cloud of pure chaos instead of flames.
+fire. The resulting blaze can flare up, spreading to areas nearby and igniting
+other trees.
