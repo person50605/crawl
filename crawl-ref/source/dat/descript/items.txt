@@ -75,7 +75,7 @@ with a windlass. It takes some time to load and fire.
 %%%%
 athame
 
-An ornate and bewitched ritual dagger. Even just wielding it will cost a small
+An ornate and bewitched ritual knife. Even just wielding it will cost a small
 piece of your health, but blows made with it against those suffering negative
 statuses (other than poison) have increased base damage, up to +4 for two
 such baleful ailments.
@@ -892,9 +892,9 @@ and the flame which burns away impurity.
 %%%%
 javelin
 
-A lightweight spear, designed for throwing. It will pass through the targets it
-hits, potentially hitting all targets in its path until it reaches maximum
-range.
+A lightweight penetrating spear, designed for throwing. It will pass through the
+targets it hits, potentially hitting all targets in its path until it reaches
+maximum range.
 {{
     if you.race() == "Kobold" or you.race() == "Spriggan" then
         return "Unfortunately, it is too long and awkward for you to use."
@@ -1141,6 +1141,22 @@ instantly.
 potion of invisibility
 
 A potion which confers invisibility on one who consumes it.
+
+[[player invis desc]]
+%%%%
+player invis desc
+
+While invisible, most monsters have greatly reduced accuracy against you,
+cannot make attacks of opportunity, and the spells they cast may sometimes be
+aimed at the wrong location. They may also stumble around and eventually lose
+track of you, especially if their intelligence is low.
+
+In addition, melee attacks you make against such creatures have a chance
+(proportional to your stealth and weapon skill) of catching them off-guard and
+dealing increased damage, especially if performed with a short blade.
+
+Certain creatures can see through this invisibility and it will always be
+completely ineffective while standing in water.
 %%%%
 potion of lignification
 
@@ -1838,8 +1854,9 @@ wellspring talisman
 
 A small amphora from which pours a seemingly unending quantity of water.
 Transforms the wearer's flesh into elemental water, allowing them to move flexibly
-and reach to attack from a great distance. From time to time, they can even
-cause the water around them to rise up and drown their enemies.
+and reach to attack from a great distance, though without the precision needed
+to stab from range. From time to time, they can even cause the water around them
+to rise up and drown their enemies.
 
 The malleability of this water even allows them to retain the benefits of their
 physical mutations, but cold attacks can freeze it solid and fire may cause it
@@ -1855,4 +1872,8 @@ young poisoner's handbook
 
 An introductory book for the magic arts of poison. Readers are recommended to
 wear a pair of very thick, non-absorbent gloves.
+%%%%
+detected item
+
+You have detected an object here, but you do not know what it is.
 %%%%

@@ -132,7 +132,7 @@ static void _redraw_console_at(coord_def pos)
     int flash_colour = you.flash_colour == BLACK
         ? viewmap_flash_colour()
         : you.flash_colour;
-    monster_type mons = env.map_knowledge(pos).monster();
+    monster_type mons = env.map_knowledge(pos).mon_type();
     int cell_colour =
         flash_colour &&
         (mons == MONS_NO_MONSTER || mons_class_is_firewood(mons))
@@ -222,23 +222,24 @@ void animation_delay(unsigned int ms, bool do_refresh)
     scaled_delay(ms);
 }
 
-static void _flash_view(colour_t colour, targeter* where)
+static void _flash_view(colour_t colour, int alpha, targeter* where)
 {
 #ifndef USE_TILE_LOCAL
     save_cursor_pos save;
 #endif
 
     you.flash_colour = colour;
+    you.flash_alpha = alpha;
     you.flash_where = where;
     viewwindow(false);
     update_screen();
 }
 
-void flash_view(use_animation_type a, colour_t colour, targeter *where)
+void flash_view(use_animation_type a, colour_t colour, int alpha, targeter *where)
 {
     if (crawl_state.need_save && Options.use_animations & a)
     {
-        _flash_view(colour, where);
+        _flash_view(colour, alpha, where);
 #ifdef USE_TILE
         tiles.redraw();
 #endif
@@ -246,13 +247,13 @@ void flash_view(use_animation_type a, colour_t colour, targeter *where)
 }
 
 void flash_view_delay(use_animation_type a, colour_t colour, int flash_delay,
-                      targeter *where)
+                      int alpha, targeter *where)
 {
     if (crawl_state.need_save && Options.use_animations & a)
     {
-        _flash_view(colour, where);
+        _flash_view(colour, alpha, where);
         scaled_delay(flash_delay);
-        _flash_view(BLACK, nullptr);
+        _flash_view(BLACK, 0, nullptr);
     }
 }
 
@@ -325,7 +326,8 @@ static update_flags player_view_update_at(const coord_def &gc)
             && !(branches[you.where_are_you].branch_flags & brflag::fully_map)
             && !(player_in_branch(BRANCH_SLIME) && you_worship(GOD_JIYVA)))
         {
-            did_god_conduct(DID_EXPLORATION, 2500);
+            // Level is not used.
+            did_god_conduct(DID_EXPLORATION, 0);
             const int density = env.density ? env.density : 2000;
             you.exploration += div_rand_round(1<<16, density);
             roll_trap_effects();
@@ -417,7 +419,7 @@ static void _draw_player(screen_cell_t *cell,
     cell->tile.cloud = tile_env.bk_cloud(gc);
     cell->tile.icons = status_icons_for_player();
     if (anim_updates)
-        tile_apply_animations(cell->tile.bg, &tile_env.flv(gc));
+        tile_apply_animations(cell->tile.bg.tile(), &tile_env.flv(gc));
 #else
     UNUSED(anim_updates);
 #endif
@@ -438,7 +440,7 @@ static void _draw_los(screen_cell_t *cell,
     if (set<tileidx_t>* icons = map_find(tile_env.icons, gc))
         cell->tile.icons = *icons;
     if (anim_updates)
-        tile_apply_animations(cell->tile.bg, &tile_env.flv(gc));
+        tile_apply_animations(cell->tile.bg.tile(), &tile_env.flv(gc));
 #else
     UNUSED(anim_updates);
 #endif
@@ -709,7 +711,8 @@ void viewwindow(bool show_updates, bool tiles_only, animation *a, view_renderer 
             // Leaving it this way because short flashes can occur in long ones,
             // and this simply works without requiring a stack.
             you.flash_colour = BLACK;
-            you.flash_where = 0;
+            you.flash_alpha = 0;
+            you.flash_where = nullptr;
         }
 
         // Reset env.show if we munged it.
@@ -893,9 +896,9 @@ crawl_view_buffer view_dungeon(animation *a, bool anim_updates, view_renderer *r
             : view2grid(*ri);
 
         if (you.flash_where && you.flash_where->is_affected(gc) <= 0)
-            draw_cell(cell, gc, anim_updates, 0);
+            draw_cell(cell, gc, anim_updates, 0, 0);
         else
-            draw_cell(cell, gc, anim_updates, flash_colour);
+            draw_cell(cell, gc, anim_updates, flash_colour, you.flash_alpha);
 
         cell++;
     }
@@ -907,10 +910,12 @@ crawl_view_buffer view_dungeon(animation *a, bool anim_updates, view_renderer *r
 }
 
 void draw_cell(screen_cell_t *cell, const coord_def &gc,
-               bool anim_updates, int flash_colour)
+               bool anim_updates, int flash_colour, int flash_alpha)
 {
 #ifdef USE_TILE
     cell->tile.clear();
+#else
+    UNUSED(flash_alpha);
 #endif
 
     if (!map_bounds(gc))
@@ -932,12 +937,12 @@ void draw_cell(screen_cell_t *cell, const coord_def &gc,
 #ifdef USE_TILE
     cell->tile.map_knowledge = map_bounds(gc) ? env.map_knowledge(gc) : map_cell();
     cell->flash_colour = BLACK;
-    cell->flash_alpha = 0;
+    cell->flash_alpha = flash_alpha;
 #endif
 
     // Don't hide important information by recolouring monsters.
     bool allow_mon_recolour = query_map_knowledge(true, gc, [](const map_cell& m) {
-        return m.monster() == MONS_NO_MONSTER || mons_class_is_firewood(m.monster());
+        return m.mon_type() == MONS_NO_MONSTER || mons_class_is_firewood(m.mon_type());
     });
 
     // Is this cell excluded from movement by mesmerise-related statuses?
@@ -971,7 +976,7 @@ void draw_cell(screen_cell_t *cell, const coord_def &gc,
 #ifdef USE_TILE
         if (you.see_cell(gc)) {
             cell->flash_colour = real_colour(flash_colour, gc);
-            cell->flash_alpha = 0;
+            cell->flash_alpha = flash_alpha;
         }
 #endif
     }
@@ -993,14 +998,16 @@ void draw_cell(screen_cell_t *cell, const coord_def &gc,
         bool found = gc == you.pos();
 
         if (!found)
-            for (auto mon : *crawl_state.flash_monsters)
+        {
+            for (auto pos : *crawl_state.flash_monsters)
             {
-                if (gc == mon->pos())
+                if (gc == pos)
                 {
                     found = true;
                     break;
                 }
             }
+        }
 
         if (!found)
             cell->colour = DARKGREY;
@@ -1027,7 +1034,7 @@ void draw_cell(screen_cell_t *cell, const coord_def &gc,
         && map_bounds(gc)
         && (_layers == Layer::None
             || gc != you.pos()
-               && (env.map_knowledge(gc).monster() == MONS_NO_MONSTER
+               && (env.map_knowledge(gc).mon_type() == MONS_NO_MONSTER
                    || !you.see_cell(gc)))
         && travel_colour_override(gc))
     {

@@ -105,7 +105,7 @@ spret cast_freezing_cloud(int pow, const coord_def& target, bool fail)
     hitfunc.set_aim(target);
 
     if (stop_attack_prompt(hitfunc, "conjure a freezing cloud",
-                            [](const actor *act) { return act->is_player() || act->res_cold() < 3;},
+                            [](const actor *act) { return (act->is_player() || act->res_cold() < 3) && !act->cloud_immune();},
                             nullptr, nullptr, false, true))
     {
         return spret::abort;
@@ -200,7 +200,7 @@ spret scroll_of_poison(bool scroll_unknown)
     {
         if (const actor* act = actor_at(*ri))
         {
-            unknown_unseen = unknown_unseen || !you.can_see(*act);
+            unknown_unseen = unknown_unseen || !you.aware_of(*act);
             continue;
         }
 

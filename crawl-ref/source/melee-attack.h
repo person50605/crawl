@@ -196,7 +196,6 @@ private:
     string charge_desc();
     string weapon_desc();
     void player_warn_miss();
-    void player_weapon_upsets_god();
     bool bad_attempt();
     bool player_unrand_bad_attempt(bool check_only = false);
     void _defender_die();
@@ -204,6 +203,7 @@ private:
     void do_valour_beam();
     bool is_sundering_weapon() const;
     void handle_concussion_brand();
+    void grow_burstshrooms(int hd);
 
     // Spell effects.
     void maybe_trigger_detonation();

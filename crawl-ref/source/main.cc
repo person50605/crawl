@@ -492,8 +492,6 @@ NORETURN static void _launch_game()
     tiles.redraw();
 #endif
 
-    run_uncancels();
-
     cursor_control ccon(!Options.use_fake_player_cursor);
     while (true)
         _input();
@@ -586,6 +584,9 @@ static void _show_commandline_options_help()
     puts("  -dump-disconnect    In mapstat when a disconnected level is "
          "generated, dump");
     puts("      map to map.dump and exit");
+    puts("  -veto-closets       In mapstat, veto levels with teleport closets "
+         "rather than");
+    puts("      masking the closets as in normal play");
     puts("  -objstat [<levels>] run monster and item stats on the given range "
          "of levels");
     puts("      Defaults to entire dungeon; same level syntax as -mapstat.");
@@ -1128,6 +1129,18 @@ static void _input()
 
     hints_new_turn();
 
+    if (has_uncancel())
+    {
+        resume_uncancel();
+        if (you.turn_is_over)
+        {
+            if (you.berserk())
+                _do_berserk_no_combat_penalty();
+            world_reacts();
+            return;
+        }
+    }
+
     if (you.cannot_act())
     {
         if (crawl_state.repeat_cmd != CMD_WIZARD)
@@ -1176,7 +1189,8 @@ static void _input()
     if (you_are_delayed()
         && !dynamic_cast<MacroProcessKeyDelay*>(current_delay().get()))
     {
-        stop_channelling_spells();
+        if (!current_delay().get()->is_macro())
+            stop_channelling_spells();
         handle_delay();
 
         // Some delays set you.turn_is_over.
@@ -1195,9 +1209,6 @@ static void _input()
                 _do_berserk_no_combat_penalty();
             world_reacts();
         }
-
-        if (!you_are_delayed())
-            update_can_currently_train();
 
 #ifdef USE_TILE_WEB
         tiles.flush_messages();
@@ -1338,8 +1349,6 @@ static void _input()
         update_screen();
     }
 
-    update_can_currently_train();
-
     _update_replay_state();
 
     crawl_state.clear_god_acting();
@@ -1349,7 +1358,8 @@ static bool _can_take_stairs(dungeon_feature_type ftype, bool down,
                              bool known_shaft)
 {
     // Up and down both work for shops, portals, and altars.
-    if (ftype == DNGN_ENTER_SHOP || feat_is_altar(ftype))
+    if (ftype == DNGN_ENTER_SHOP || feat_is_altar(ftype)
+        || ftype == DNGN_PURIFIED_MUTATION_CATALYST)
     {
         if (crawl_state.doing_prev_cmd_again)
         {
@@ -1361,6 +1371,8 @@ static bool _can_take_stairs(dungeon_feature_type ftype, bool down,
             canned_msg(MSG_TOO_BERSERK);
         else if (ftype == DNGN_ENTER_SHOP) // don't convert to capitalism
             shop();
+        else if (ftype == DNGN_PURIFIED_MUTATION_CATALYST)
+            use_mutation_catalyst();
         else
             try_god_conversion(feat_altar_god(ftype));
         // Even though we may have "succeeded", return false so we don't keep
@@ -2183,11 +2195,8 @@ void process_command(command_type cmd, command_type prev_cmd)
     case CMD_ENABLE_MORE:  crawl_state.show_more_prompt = true;  break;
 
     case CMD_TOGGLE_AUTOPICKUP:
-        if (Options.autopickup_on < 1)
-            Options.autopickup_on = 1;
-        else
-            Options.autopickup_on = 0;
-        mprf("Autopickup is now %s.", Options.autopickup_on > 0 ? "on" : "off");
+        Options.autopickup_on = !Options.autopickup_on;
+        mprf("Autopickup is now %s.", Options.autopickup_on ? "on" : "off");
         break;
 
 #ifdef USE_SOUND
@@ -2201,6 +2210,7 @@ void process_command(command_type cmd, command_type prev_cmd)
     case CMD_CLEAR_MAP:       clear_map_or_travel_trail(); break;
     case CMD_DISPLAY_OVERMAP: display_overview(); break;
     case CMD_DISPLAY_MAP:     _do_display_map(); break;
+    case CMD_IGNORE_INVISIBLE: env.invis_knowledge.suppress_invis_warning(); break;
 
 #ifdef USE_TILE
     case CMD_ZOOM_IN:   tiles.zoom_dungeon(true); break;
@@ -2658,6 +2668,8 @@ void world_reacts()
 
     manage_clouds();
 
+    handle_lurkers();
+
     // This needs to happen after `manage_clouds` is called as fog clouds
     // decaying will affect whether a monster is still in view
     print_mons_left_view_messages();
@@ -2668,10 +2680,14 @@ void world_reacts()
         player_reacts_to_monsters();
 
     clear_monster_flags();
-
-    add_auto_excludes();
+    env.invis_knowledge.handle_time();
 
     viewwindow();
+
+    // Needs to happen after viewwindow() so that the map knowledge is up to
+    // date to decide which monsters to exclude.
+    add_auto_excludes();
+
     update_screen();
 
     _check_trapped();
@@ -2807,7 +2823,7 @@ static void _swing_at_target(coord_def move)
     if (monster* mon = monster_at(target.target))
         if (!could_harm(&you, mon, true, true))
         {
-            if (!you.can_see(*mon))
+            if (!you.aware_of(*mon))
                 you.turn_is_over = true;
             return;
         }

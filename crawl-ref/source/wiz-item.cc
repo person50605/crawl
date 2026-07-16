@@ -86,7 +86,7 @@ void wizard_create_spec_object_by_name()
     create_item_named(buf, you.pos(), &error);
     if (!error.empty())
     {
-        mprf(MSGCH_ERROR, "Error: %s", error.c_str());
+        mprf(MSGCH_ERROR, "%s", error.c_str());
         return;
     }
     id_floor_items();
@@ -137,7 +137,7 @@ void wizard_create_spec_object()
         item.sub_type  = 0;
         item.quantity  = amount;
     }
-    // in this case, place_monster_corpse will allocate an item for us, and we
+    // in this case, place_corpse_or_gold will allocate an item for us, and we
     // don't use item/thing_created.
     else if (class_wanted == OBJ_CORPSES)
     {
@@ -171,7 +171,7 @@ void wizard_create_spec_object()
                 =  max(1, min(27, prompt_for_int("How many heads? ", false)));
         }
 
-        if (!place_monster_corpse(dummy, true))
+        if (!place_corpse_or_gold(dummy, true))
         {
             mpr("Failed to create corpse.");
             return;
@@ -431,23 +431,6 @@ void wizard_tweak_object()
     }
 }
 
-static bool _make_book_randart(item_def &book)
-{
-    int type;
-
-    do
-    {
-        mprf(MSGCH_PROMPT, "Make book fixed [t]heme or fixed [l]evel? ");
-        type = toalower(getch_ck());
-    }
-    while (type != 't' && type != 'l');
-
-    if (type == 'l')
-        return make_book_level_randart(book);
-    build_themed_book(book);
-    return true;
-}
-
 /// Prompt for an item in inventory & print its base shop value.
 void wizard_value_item()
 {
@@ -617,11 +600,8 @@ void wizard_make_object_randart()
 
     if (item.base_type == OBJ_BOOKS)
     {
-        if (!_make_book_randart(item))
-        {
-            mpr("Failed to turn book into randart.");
-            return;
-        }
+        build_themed_book(item);
+        return;
     }
     else if (!make_item_randart(item, true))
     {
@@ -847,11 +827,6 @@ static void _debug_acquirement_stats()
                     const int disc1 = item.plus & 0xFF;
                     ego_quants[disc1]++;
                 }
-                else if (item.sub_type == BOOK_RANDART_LEVEL)
-                {
-                    const int level = item.plus;
-                    ego_quants[SPSCHOOL_LAST_EXPONENT + level]++;
-                }
             }
         }
         else if (type == OBJ_ARMOUR) // Exclude artefacts when counting egos.
@@ -1015,8 +990,7 @@ static void _debug_acquirement_stats()
     else if (type == OBJ_BOOKS)
     {
         // Print disciplines of artefact spellbooks.
-        if (subtype_quants[BOOK_RANDART_THEME]
-            + subtype_quants[BOOK_RANDART_LEVEL] > 0)
+        if (subtype_quants[BOOK_RANDART_THEME] > 0)
         {
             fprintf(ostat, "Primary disciplines/levels of randart books:\n");
 

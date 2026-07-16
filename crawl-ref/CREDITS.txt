@@ -161,6 +161,7 @@
     cut1less
     Matthew Daley
     David Damerell
+    Victor 'Vji' Davidescu
     Paul Dejean
     Denzi
     DevJac
@@ -216,6 +217,7 @@
     Brian Haase
     Sophie Hamilton
     Chris Hamons
+    hanchyan
     Tomas Krag Hansen
     Lexi Hattaway
     Taylor Hedberg
@@ -308,6 +310,7 @@
     Eva Myers
     Mystic Sailboat
     nagdon
+    NagyDonat
     Naruni
     neofelis
     nirrattner
@@ -317,7 +320,6 @@
     Erkki Nurmi
     Mattias Nyberg
     nyra
-    Odds
     Weston Odom
     Dylan O'Donnell
     Heinrich Ody
@@ -352,6 +354,7 @@
     Iago Porto
     Alexander Posch
     Brian Power
+    Predelnik
     psywombats
     pubby
     pyy156941
@@ -381,6 +384,7 @@
     Risto Saarelma
     Sebastian Salman
     Petri Salminen
+    Lyla Sanders
     Sandman25
     Brett Scarborough
     Roderick Schertler
@@ -447,6 +451,7 @@
     Yelve Yakut
     Edward Z. Yang
     Yermak
+    Christopher 'GoodKnight' Yim
     YLam
     Andrew G. York
     Rob Young
@@ -500,6 +505,7 @@ The Dungeon Crawl Stone Soup development team is:
     Neil Moore
     nicolae
     Steven Noonan
+    Odds
     Stefan O'Rear
     Charles Otto
     Aaron Pixton

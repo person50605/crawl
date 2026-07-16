@@ -58,6 +58,7 @@
 #include "target.h"
 #include "teleport.h"
 #include "terrain.h"
+#include "rltiles/tiledef-main.h"
 #include "transform.h"
 #include "view.h"
 #include "viewchar.h"
@@ -165,8 +166,11 @@ static void _share_ench_durations(monster* initial_slime, monster* split_off)
 
             // The newly split slime will also be vengeance marked, so we need
             // to increment the total number of monsters the player has to kill
-            if (entry.second.ench == ENCH_VENGEANCE_TARGET)
+            if (entry.second.ench == ENCH_VENGEANCE_TARGET
+                && split_off->is_vengeance_target())
+            {
                 you.duration[DUR_BEOGH_SEEKING_VENGEANCE] += 1;
+            }
         }
     }
 }
@@ -389,8 +393,9 @@ static void _do_merge_slimes(monster* initial_slime, monster* merge_to)
             mprf("Something merges into %s, and it vanishes!",
                  old_name.c_str());
         }
-
-        flash_view_delay(UA_MONSTER, LIGHTGREEN, 150);
+        draw_ring_animation(merge_to->pos(), 2, LIGHTGREEN, LIGHTGREEN,
+                            false, 50, TILE_BOLT_SLIME_WAVE);
+        flash_tile(merge_to->pos(), LIGHTGREEN, 50, TILE_BOLT_SLIME_MERGE);
     }
     else if (you.can_see(*initial_slime))
     {
@@ -854,7 +859,7 @@ bool lost_soul_revive(monster& mons, killer_type killer)
         }
 
         targeter_radius hitfunc(*mi, LOS_SOLID);
-        flash_view_delay(UA_MONSTER, GREEN, 200, &hitfunc);
+        flash_view_delay(UA_MONSTER, GREEN, 200, 75, &hitfunc);
 
         mons.heal(mons.max_hit_points);
         mons.timeout_enchantments();
@@ -1077,7 +1082,7 @@ static bool _slymdra_try_merge(monster* mons)
     {
         if (you.see_cell(mons->pos()))
         {
-            flash_tile(mons->pos(), LIGHTGREEN);
+            flash_tile(mons->pos(), LIGHTGREEN, 50, TILE_BOLT_SLIME_MERGE);
             const int gained_heads = new_heads - old_heads;
             const string head_msg = gained_heads == 1 ? "sprouts a new head"
                                                       : make_stringf("sprouts %d new heads", gained_heads);
@@ -1115,12 +1120,6 @@ static bool _slymdra_split_or_merge(monster* mons)
     }
 
     return false;
-}
-
-static inline void _mons_cast_abil(monster* mons, bolt &pbolt,
-                                   spell_type spell_cast)
-{
-    mons_cast(mons, pbolt, spell_cast, MON_SPELL_NATURAL);
 }
 
 bool mon_special_ability(monster* mons)
@@ -1342,10 +1341,11 @@ bool egg_is_incubating(const monster& egg)
 
     // Finally, check that there are foes sufficiently nearby (and in the
     // parent's LoS)
-    for (monster_near_iterator mi(parent, LOS_NO_TRANS); mi; ++mi)
+    for (monster_near_iterator mi(parent->pos(), LOS_NO_TRANS); mi; ++mi)
     {
         if (!mons_aligned(*mi, &egg) && !mi->is_firewood()
-            && grid_distance(egg.pos(), mi->pos()) <= 4)
+            && grid_distance(egg.pos(), mi->pos()) <= 4
+            && egg.can_see(**mi))
         {
             return true;
         }

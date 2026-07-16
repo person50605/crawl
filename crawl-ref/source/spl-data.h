@@ -1393,7 +1393,7 @@ static const struct spell_desc spelldata[] =
     0,
     -1, -1,
     0,
-    TILEG_SUMMON_UFETUBUS,
+    TILEG_UFETUBI_SWARM,
 },
 
 {
@@ -1690,6 +1690,17 @@ static const struct spell_desc spelldata[] =
     LOS_RADIUS, LOS_RADIUS,
     0,
     TILEG_HASTE_OTHER,
+},
+
+{
+    SPELL_TOUCH_OF_PARADOX, "Touch of Paradox",
+    spschool::translocation | spschool::hexes,
+    spflag::helpful | spflag::monster,
+    7,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    0,
+    TILEG_TOUCH_OF_PARADOX,
 },
 
 {
@@ -2650,6 +2661,17 @@ static const struct spell_desc spelldata[] =
 },
 
 {
+    SPELL_BOLT_OF_ANTIMAGIC, "Bolt of Antimagic",
+    spschool::conjuration | spschool::hexes,
+    spflag::dir_or_target | spflag::needs_tracer | spflag::monster,
+    6,
+    200,
+    5, 5,
+    0,
+    TILEG_BOLT_OF_ANTIMAGIC,
+},
+
+{
     SPELL_BOLT_OF_FLESH, "Bolt of Flesh",
     spschool::conjuration | spschool::necromancy | spschool::summoning,
     spflag::dir_or_target | spflag::needs_tracer| spflag::monster
@@ -2898,6 +2920,17 @@ static const struct spell_desc spelldata[] =
     LOS_RADIUS, LOS_RADIUS,
     0,
     TILEG_AVATAR_SONG,
+},
+
+{
+    SPELL_MURKY_LEGION, "Murky Legion",
+    spschool::summoning | spschool::necromancy,
+    spflag::unholy | spflag::chaotic | spflag::monster,
+    6,
+    0,
+    -1, -1,
+    0,
+    TILEG_MURKY_LEGION,
 },
 
 {
@@ -4638,6 +4671,39 @@ static const struct spell_desc spelldata[] =
     TILEG_SEISMIC_STOMP,
 },
 
+{
+    SPELL_STAMPEDE, "Stampede",
+    spschool::translocation,
+    spflag::monster,
+    4,
+    200,
+    LOS_RADIUS, LOS_RADIUS,
+    0,
+    TILEG_STAMPEDE,
+},
+
+{
+    SPELL_BOLSTER, "Bolster",
+    spschool::hexes,
+    spflag::helpful | spflag::selfench | spflag::monster,
+    6,
+    200,
+    -1, -1,
+    0,
+    TILEG_BOLSTER,
+},
+
+{
+    SPELL_PHASE_SHIFT, "Phase Shift",
+    spschool::translocation,
+    spflag::helpful | spflag::selfench | spflag::monster,
+    6,
+    200,
+    -1, -1,
+    0,
+    TILEG_PHASE_SHIFT,
+},
+
 #if TAG_MAJOR_VERSION == 34
 #define AXED_SPELL(tag, name) \
     { tag, name, spschool::none, spflag::none, 7, 0, -1, -1, 0, TILEG_ERROR },
@@ -4680,7 +4746,7 @@ AXED_SPELL(SPELL_IRON_ELEMENTALS, "Summon Iron Elementals")
 AXED_SPELL(SPELL_LETHAL_INFUSION, "Lethal Infusion")
 AXED_SPELL(SPELL_MELEE, "Melee")
 AXED_SPELL(SPELL_MISLEAD, "Mislead")
-AXED_SPELL(SPELL_PHASE_SHIFT, "Phase Shift")
+AXED_SPELL(SPELL_PHASE_SHIFT_OLD, "Phase Shift")
 AXED_SPELL(SPELL_POISON_WEAPON, "Poison Weapon")
 AXED_SPELL(SPELL_RANDOM_BOLT, "Random Bolt")
 AXED_SPELL(SPELL_REARRANGE_PIECES, "Rearrange the Pieces")

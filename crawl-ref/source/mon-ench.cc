@@ -24,10 +24,12 @@
 #include "fight.h"
 #include "hints.h"
 #include "god-abil.h"
+#include "god-companions.h"
 #include "item-status-flag-type.h"
 #include "items.h"
 #include "libutil.h"
 #include "losglobal.h"
+#include "map-knowledge.h"
 #include "message.h"
 #include "mon-abil.h"
 #include "mon-aura.h"
@@ -320,7 +322,7 @@ void monster::add_enchantment_effect(const mon_enchant &ench, bool quiet)
                      name(DESC_PLAIN, true).c_str());
             }
 
-            autotoggle_autopickup(!friendly());
+            sense_if_invisible();
             maybe_notice_monster(*this);
         }
 
@@ -341,10 +343,7 @@ void monster::add_enchantment_effect(const mon_enchant &ench, bool quiet)
         // view but the screen hasn't redrawn with it in view, the player won't
         // be confused by their auto explore stopping etc.
         if (testbits(flags, MF_WAS_IN_VIEW))
-        {
-            revealed_this_turn = true;
-            revealed_at_pos = pos();
-        }
+            sense_if_invisible();
         break;
 
     case ENCH_STILL_WINDS:
@@ -372,6 +371,13 @@ void monster::add_enchantment_effect(const mon_enchant &ench, bool quiet)
     case ENCH_PARADOX_TOUCHED:
         spells.push_back({SPELL_MANIFOLD_ASSAULT, 50, MON_SPELL_NATURAL});
         props[CUSTOM_SPELLS_KEY] = true;
+        break;
+
+    case ENCH_CORONA:
+    case ENCH_SILVER_CORONA:
+    case ENCH_STICKY_FLAME:
+        if (has_ench(ENCH_INVIS) && you.see_cell(pos()))
+            env.invis_knowledge.update(*this);
         break;
 
     default:
@@ -577,8 +583,6 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
         if (you.see_cell(pos()) && !you.can_see_invisible()
             && !friendly())
         {
-            autotoggle_autopickup(false);
-
             if (backlit())
                 break;
 
@@ -586,6 +590,7 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
                 mprf("%s appears from thin air!", name(DESC_A, true).c_str());
 
             maybe_notice_monster(*this);
+            env.invis_knowledge.update(*this);
         }
         break;
 
@@ -608,11 +613,7 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
                      name(DESC_THE, true).c_str());
             }
 
-            if (!friendly())
-            {
-                //turn off auto pickup
-                autotoggle_autopickup(true);
-            }
+            env.invis_knowledge.update(*this);
         }
         else
         {
@@ -628,7 +629,7 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
 
         }
 
-        if (you.can_see(*this))
+        if (you.aware_of(*this))
         {
             // and fire activity interrupts
             interrupt_activity(activity_interrupt::see_monster,
@@ -658,6 +659,8 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
             {
                 mprf("%s stops glowing and disappears.",
                      name(DESC_THE, true).c_str());
+
+                sense_if_invisible();
             }
         }
         break;
@@ -665,6 +668,7 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
     case ENCH_STICKY_FLAME:
         if (!quiet)
             simple_monster_message(*this, " stops burning.");
+        sense_if_invisible();
         break;
 
     case ENCH_POISON:
@@ -870,16 +874,16 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
     {
         if (is_constricted())
         {
-            if (!quiet && you.can_see(*this))
+            if (!quiet && you.aware_of(*this))
             {
                 if (constricted_type == CONSTRICT_BVC)
                 {
-                    mprf("The zombie hands holding %s return to the earth.",
+                    mprf("The zombie hands constricting %s return to the earth.",
                          name(DESC_THE).c_str());
                 }
                 else if (constricted_type == CONSTRICT_ROOTS)
                 {
-                    mprf("The roots around %s sink back into the ground.",
+                    mprf("The roots constricting %s sink back into the ground.",
                          name(DESC_THE).c_str());
                 }
             }
@@ -1040,7 +1044,7 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
 
     case ENCH_PARADOX_TOUCHED:
         if (!quiet)
-            simple_monster_message(*this, "is no longer touched by paradox.");
+            simple_monster_message(*this, " is no longer touched by paradox.");
         for (size_t i = 0; i < spells.size(); ++i)
         {
             if (spells[i].spell == SPELL_MANIFOLD_ASSAULT && spells[i].flags | MON_SPELL_NATURAL)
@@ -1079,6 +1083,16 @@ void monster::remove_enchantment_effect(const mon_enchant &me, bool quiet)
     case ENCH_EXPOSED:
         if (!quiet)
             simple_monster_message(*this, " is no longer exposed.");
+        break;
+
+    case ENCH_STAMPEDE:
+        if (!quiet)
+            simple_monster_message(*this, " stops stampeding.");
+        break;
+
+    case ENCH_PREPARING_TO_LURK:
+        if (!you.can_see(*this) && behaviour == BEH_WANDER)
+            start_lurking(*this);
         break;
 
     default:
@@ -1401,6 +1415,9 @@ void monster::apply_enchantment(const mon_enchant &me)
     case ENCH_SUNDER_CHARGE:
     case ENCH_EXPOSED:
     case ENCH_BRAMBLE_COOLDOWN:
+    case ENCH_STAMPEDE:
+    case ENCH_PREPARING_TO_LURK:
+    case ENCH_PHASE_SHIFT:
         decay_enchantment(en);
         break;
 
@@ -1464,7 +1481,7 @@ void monster::apply_enchantment(const mon_enchant &me)
         if (dam > 0)
         {
             dprf("%s takes poison damage: %d (degree %d)",
-                 name(DESC_THE).c_str(), dam, me.degree);
+                 name(DESC_THE, true).c_str(), dam, me.degree);
 
             hurt(me.agent(), dam, BEAM_POISON, KILLED_BY_POISON);
         }
@@ -1491,7 +1508,15 @@ void monster::apply_enchantment(const mon_enchant &me)
 
         if (dam > 0)
         {
-            simple_monster_message(*this, " burns!");
+            int rf = this->res_fire();
+            string msg;
+            if (rf < 0)
+                msg = " burns terribly!";
+            else if (rf == 0)
+                msg = " burns!";
+            else
+                msg = " burns.";
+            simple_monster_message(*this, msg.c_str());
             dprf("sticky flame damage: %d", dam);
             hurt(me.agent(), dam, BEAM_STICKY_FLAME);
         }
@@ -1972,7 +1997,25 @@ void monster::apply_enchantments()
     // like berserk time out before their parts.
     for (int i = 0; i < NUM_ENCHANTMENTS; ++i)
         if (ec[i] && has_ench(static_cast<enchant_type>(i)))
+        {
             apply_enchantment(enchantments.find(static_cast<enchant_type>(i))->second);
+            if (!alive())
+                return;
+        }
+}
+
+bool monster::is_vengeance_target() const
+{
+    if (!has_ench(ENCH_VENGEANCE_TARGET))
+        return false;
+    // When entering a level, old vengeance will be removed from monsters by a
+    // daction. However, it is possible for a monster to die before that runs
+    // (e.g. from an earlier daction to clean up Pikel minions) and killing a
+    // monster that is a vengeance target while not under penance results in a
+    // crash, so don't count a monster as a vengeance target if it was set by
+    // an old vengeance.
+    return get_ench(ENCH_VENGEANCE_TARGET).degree
+           == you.props[BEOGH_VENGEANCE_NUM_KEY].get_int();
 }
 
 // Used to adjust time durations in calc_duration() for monster speed.
@@ -2138,8 +2181,8 @@ static const char *enchant_names[] =
     "vampire_thrall", "pyrrhic_recollection", "clockwork_bee_cast",
     "phalanx_barrier", "figment", "paradox-touched", "warding",
     "diminished_spells", "orb_cooldown", "sunder_charge",
-    "exposed",
-    "briar_cooldown",
+    "exposed", "briar_cooldown", "stampeding",
+    "preparing_to_lurk", "phase_shift",
     "buggy", // NUM_ENCHANTMENTS
 };
 
@@ -2393,6 +2436,8 @@ int mon_enchant::calc_duration(const monster* mons,
     case ENCH_EMPOWERED_SPELLS:
         cturn = 35 * 10 / _mod_speed(10, mons->speed);
         break;
+    case ENCH_PREPARING_TO_LURK:
+        return random_range(100, 500);
     case ENCH_RING_OF_THUNDER:
     case ENCH_RING_OF_FLAMES:
     case ENCH_RING_OF_CHAOS:

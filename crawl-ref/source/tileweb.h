@@ -219,9 +219,9 @@ public:
     void dump();
     void update_input_mode(mouse_mode mode, bool force=false);
 
-    void send_mcache(mcache_entry *entry, bool submerged,
+    void send_mcache(mcache_entry *entry, bool submerged, bool invis,
                      bool send = true);
-    void write_tileidx(tileidx_t t);
+    void write_tile_with_flags(tile_with_flags_t t);
 
     void zoom_dungeon(bool in);
 
@@ -317,6 +317,8 @@ protected:
     dolls_data last_player_doll;
 
     player_info m_current_player_info;
+
+    string invis_mon_desc;
 
     string m_pending_text_input;
 

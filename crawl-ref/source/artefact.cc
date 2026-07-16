@@ -58,7 +58,8 @@ static bool _god_fits_artefact(const god_type which_god, const item_def &item,
     // First check the item's base_type and sub_type, then check the
     // item's brand and other randart properties.
 
-    const bool type_bad = !god_likes_item_type(item, which_god);
+    const bool type_bad = !god_likes_item_type(item.base_type, item.sub_type,
+                                               which_god);
 
     if (type_bad && !name_check_only)
     {
@@ -69,7 +70,7 @@ static bool _god_fits_artefact(const god_type which_god, const item_def &item,
     if (type_bad)
         return false;
 
-    const int brand = get_weapon_brand(item);
+    const brand_type brand = get_weapon_brand(item);
     const int ego   = get_armour_ego_type(item);
 
     if (is_evil_god(which_god) && brand == SPWPN_HOLY_WRATH)
@@ -1772,7 +1773,39 @@ static int _unrand_weight(int unrand_index, int item_level)
     return item_level <= pref_max_level ? 100 : 1;
 }
 
-int find_okay_unrandart(uint8_t aclass, uint8_t atype, int item_level, bool in_abyss)
+static bool _unrand_is_compatible(const unrandart_entry& unrand,
+                                  object_class_type aclass,
+                                  uint8_t atype,
+                                  bool acquirement)
+{
+    if (unrand.base_type != aclass)
+        return false;
+    if (atype == OBJ_RANDOM)
+        return true;
+    if (aclass != OBJ_WEAPONS)
+        return unrand.sub_type == atype;
+
+    item_def required_item;
+    required_item.base_type = aclass;
+    required_item.sub_type = atype;
+
+    item_def unrand_item;
+    unrand_item.base_type = unrand.base_type;
+    unrand_item.sub_type = unrand.sub_type;
+
+    if (item_attack_skill(required_item) != item_attack_skill(unrand_item))
+        return false;
+    if (acquirement)
+    {
+        return you.hands_reqd(required_item, true)
+               == you.hands_reqd(unrand_item, true);
+    }
+    return basic_hands_reqd(required_item, SIZE_MEDIUM)
+           == basic_hands_reqd(unrand_item, SIZE_MEDIUM);
+}
+
+int find_okay_unrandart(uint8_t aclass, uint8_t atype, int item_level,
+                        bool in_abyss, bool acquirement)
 {
     int chosen_unrand_idx = -1;
 
@@ -1822,16 +1855,8 @@ int find_okay_unrandart(uint8_t aclass, uint8_t atype, int item_level, bool in_a
             continue;
         }
 
-        if (entry->base_type != aclass
-            || atype != OBJ_RANDOM && entry->sub_type != atype
-               // Acquirement.
-               && (aclass != OBJ_WEAPONS
-                   || item_attack_skill(entry->base_type, atype) !=
-                      item_attack_skill(entry->base_type, entry->sub_type)
-                   || hands_reqd(&you, entry->base_type,
-                                 atype) !=
-                      hands_reqd(&you, entry->base_type,
-                                 entry->sub_type)))
+        if (!_unrand_is_compatible(*entry, (object_class_type)aclass, atype,
+                                   acquirement))
         {
             continue;
         }

@@ -280,6 +280,7 @@ void leaving_level_now(dungeon_feature_type stair_used)
         vault_list.push_back("[exit]");
 #endif
         clear_abyssal_rune_knowledge();
+        you.props.erase(ABYSS_AREAS_SEEN_KEY);
     }
 
     // XXX: Don't consider things like banishment or Duel, which use 'stairs'
@@ -291,6 +292,7 @@ void leaving_level_now(dungeon_feature_type stair_used)
 
     end_terrain_changes(TERRAIN_CHANGE_GOLUBRIA);
     _remove_unstable_monsters();
+    cancel_pending_lurkers();
 
     // Allow players to be interrupted by sensed monsters on their return to this level.
     for (monster_iterator mi; mi; ++mi)
@@ -923,9 +925,13 @@ void floor_transition(dungeon_feature_type how,
     if (shaft)
         how = DNGN_TRAP_SHAFT;
 
+    bool from_arena = old_level.branch == BRANCH_ARENA;
+
     switch (you.where_are_you)
     {
     case BRANCH_ABYSS:
+        if (from_arena)
+            break;
         // There are no abyssal stairs that go up, so this whole case is only
         // when going down.
         // -- unless you're a rocketeer!
@@ -1020,6 +1026,22 @@ void floor_transition(dungeon_feature_type how,
         if (branch == BRANCH_ARENA)
             okawaru_duel_healing();
 
+        if (branch == BRANCH_GULCH && !from_arena)
+        {
+            mpr("Mutagenic energy floods into you!");
+            if (you.can_safely_mutate())
+            {
+                temp_mutate(RANDOM_CORRUPT_MUTATION, "entering Gulch");
+                temp_mutate(RANDOM_CORRUPT_MUTATION, "entering Gulch");
+                temp_mutate(RANDOM_CORRUPT_MUTATION, "entering Gulch");
+            }
+            else
+            {
+                mprf(MSGCH_MUTATION, "Your body decomposes!");
+                drain_player(150, false, true, true);
+            }
+        }
+
         const set<branch_type> boring_branch_exits = {
             BRANCH_TEMPLE,
             BRANCH_BAZAAR,
@@ -1088,14 +1110,21 @@ void floor_transition(dungeon_feature_type how,
 
     new_level();
 
-    if (is_hell_subbranch(you.where_are_you))
-        _hell_effects();
+    if (is_hell_subbranch(you.where_are_you) && !from_arena)
+            _hell_effects();
+
+    // this checks both new and old floor because of Okawaru duel
+    if (old_level.branch == BRANCH_SLIME && !going_up && !you.royal_jelly_dead
+        && player_in_branch(BRANCH_SLIME))
+    {
+        you.duration[DUR_OOZE_REGEN] = random_range(170, 210);
+    }
 
     if (you.unrand_equipped(UNRAND_VAINGLORY))
         _vainglory_arrival();
 
-    if (old_level.branch == BRANCH_SLIME && !going_up && !you.royal_jelly_dead)
-        you.duration[DUR_OOZE_REGEN] = random_range(170, 210);
+    if (you.wearing_ego(OBJ_ARMOUR, SPARM_MESMERISM))
+        you.duration[DUR_MESMERISM_COOLDOWN] += random_range(50, 80);
 
     trackers_init_new_level();
 
@@ -1108,7 +1137,6 @@ void floor_transition(dungeon_feature_type how,
     // Apply location effects.
     you.trigger_movement_effects(MV_NO_TRAVEL_STOP);
 
-    autotoggle_autopickup(false);
     request_autopickup();
 }
 

@@ -20,6 +20,7 @@ void end_enkindled_status();
 
 void timeout_terrain_changes(int duration, bool force = false);
 
+void update_mould_tracking(const coord_def& pos);
 void setup_environment_effects();
 
 // Lava smokes, swamp water mists.

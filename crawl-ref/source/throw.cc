@@ -604,7 +604,7 @@ static bool _trace_player_ranged_attacks(vector<ranged_attack_beam>& atks, bool 
     if (no_harm_allies && tracer.has_any_warnings())
         return true;
 
-    if (cancel_beam_prompt(atks[0].beam, tracer, atks.size()))
+    if (cancel_beam_prompt(atks[0].beam, tracer))
         return true;
 
     // Warn about Mule potentially knocking the player back into a trap.
@@ -613,7 +613,7 @@ static bool _trace_player_ranged_attacks(vector<ranged_attack_beam>& atks, bool 
         const coord_def back = you.stumble_pos(atks[0].beam.target);
         if (!back.origin()
             && back != you.pos()
-            && !check_moveto(back, "potentially stumble back", false))
+            && !check_moveto(back, "potentially stumble back", false, false))
         {
             return true;
         }
@@ -779,8 +779,11 @@ static vector<coord_def> _get_salvo_targets(const coord_def& orig_target, int nu
     vector<monster*> to_check;
     for (monster_near_iterator mi(&you, LOS_SOLID_SEE); mi; ++mi)
     {
-        if (mi->wont_attack() || mi->is_firewood() || mi->mid == primary)
+        if (mi->wont_attack() || mi->pacified() || mi->is_firewood()
+            || mi->mid == primary)
+        {
             continue;
+        }
 
         if (exists_ray(you.pos(), mi->pos(), opc_unblocked_shot, you.current_vision))
             to_check.push_back(*mi);
@@ -826,8 +829,6 @@ static void _fire_salvo(const ranged_attack_beam &pbolt)
 static void _player_shoot(ranged_attack_beam &pbolt, bool allow_salvo)
 {
     const item_def& item = *pbolt.atk.weapon;
-    const int bow_brand = get_weapon_brand(item);
-    const int ammo_brand = get_ammo_brand(item);
     const bool returning = _returning(item);
     const bool is_thrown = is_throwable(&you, item);
     const bool will_mulch = _thrown_object_destroyed(item);
@@ -904,15 +905,6 @@ static void _player_shoot(ranged_attack_beam &pbolt, bool allow_salvo)
             }
         }
     }
-
-    if (bow_brand == SPWPN_CHAOS || ammo_brand == SPMSL_CHAOS)
-        did_god_conduct(DID_CHAOS, 2 + random2(3), bow_brand == SPWPN_CHAOS);
-
-    if (bow_brand == SPWPN_SPEED)
-        did_god_conduct(DID_HASTY, 1, true);
-
-    if (ammo_brand == SPMSL_FRENZY)
-        did_god_conduct(DID_HASTY, 6 + random2(3), true);
 
     if (returning && !will_mulch)
     {
@@ -1047,7 +1039,7 @@ bool do_west_wind_shot()
 
     // Downscale damage from slow weapons versus the player's movement speed.
     const int attack_delay = you.attack_delay().roll() * BASELINE_DELAY;
-    const int move_delay = player_movement_speed() * player_speed();
+    const int move_delay = player_overall_move_delay(BASELINE_DELAY);
     if (attack_delay > move_delay)
         prototype.dmg_mult += (move_delay * 100 / attack_delay) - 100;
 

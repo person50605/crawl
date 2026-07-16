@@ -319,20 +319,24 @@ static const map<monster_type, vector<ancestor_upgrade> > ancestor_data =
         { 1,  "Shield" },
         { 1,  "Chain mail (+AC)" },
         { 15, "Broad axe (flame)" },
+        { 15, "Binding melee attacks" },
         { 19, "Tower shield (reflect)" },
-        { 19, "Haste" },
+        { 19, "Bolster" },
         { 24, "Broad axe (speed)" },
+        { 24, "Increased hit points" },
       }
     },
-    { MONS_ANCESTOR_BATTLEMAGE,
-      { { 1,  "Quarterstaff" },
-        { 1,  "Throw Frost" },
+    { MONS_ANCESTOR_ELEMENTALIST,
+      { { 1,  "Staff" },
+        { 1,  "Shock" },
         { 1,  "Stone Arrow" },
-        { 1,  "Increased melee damage" },
+        { 1,  "Deflect Missiles" },
+        { 15, "Iceblast" },
         { 15, "Bolt of Magma" },
-        { 19, "Lajatang (freeze)" },
-        { 19, "Haste" },
-        { 24, "Lehudib's Crystal Spear" },
+        { 19, "Lee's Rapid Deconstruction" },
+        { 19, "Increased spell damage" },
+        { 24, "Plasma Beam" },
+        { 24, "Permafrost Eruption" },
       }
     },
     { MONS_ANCESTOR_HEXER,
@@ -508,6 +512,7 @@ static formatted_string _god_wrath_description(god_type which_god)
 {
     formatted_string desc;
 
+    _add_par(desc, get_god_forbids(which_god));
     _add_par(desc, get_god_dislikes(which_god));
     _add_par(desc, _describe_god_wrath_causes(which_god));
     _add_par(desc, getLongDescription(god_name(which_god) + " wrath"));
@@ -864,7 +869,7 @@ static formatted_string _describe_god_powers(god_type which_god)
                                : "some of Vehumet's most lethal spells";
             desc.cprintf("You can memorise %s.\n", offer);
         }
-        else if (!you.has_mutation(MUT_INNATE_CASTER))
+        else
         {
             desc.textcolour(DARKGREY);
             desc.cprintf("You can memorise some of Vehumet's spells.\n");

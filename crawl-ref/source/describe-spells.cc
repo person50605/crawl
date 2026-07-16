@@ -13,6 +13,7 @@
 #include "english.h"
 #include "externs.h"
 #include "god-abil.h"
+#include "god-conduct.h"
 #include "invent.h"
 #include "libutil.h"
 #include "menu.h"
@@ -299,7 +300,7 @@ static int _spell_colour(spell_type spell, const item_def* const source_item)
         return COL_USELESS;
     }
 
-    if (god_hates_spell(spell, you.religion))
+    if (god_forbids_spell(spell, you.religion))
         return COL_FORBIDDEN;
 
     if (you.experience_level < spell_difficulty(spell)
@@ -771,7 +772,7 @@ static void _write_book(const spellbook_contents &book,
         tiles.json_write_string("title", dith_marker + spell_title(spell));
         tiles.json_write_int("colour", _spell_colour(spell, source_item));
         tiles.json_write_name("tile");
-        tiles.write_tileidx(tileidx_spell(spell));
+        tiles.json_write_int(tileidx_spell(spell));
 
         // don't crash if we have more spells than letters.
         auto entry = find_if(spell_map.begin(), spell_map.end(),

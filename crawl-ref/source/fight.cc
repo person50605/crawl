@@ -99,19 +99,26 @@ static double _to_hit_hit_chance(const monster_info& mi, attack &atk, bool melee
     if (to_land >= AUTOMATIC_HIT)
         return 1.0;
 
-    const double AUTO_MISS_CHANCE = is_aux ? 0 : 2.5;
-    const double AUTO_HIT_CHANCE = is_aux ? 3.3333 : 2.5;
+    const double AUTO_MISS_CHANCE = is_aux ? 0 : MIN_HIT_MISS_PERCENTAGE / 2.0;
+    const double AUTO_HIT_CHANCE = is_aux ? 3.3333 : MIN_HIT_MISS_PERCENTAGE / 2.0;
 
     int ev = mi.ev + (!melee && mi.is(MB_DEFLECT_MSL) ? DEFLECT_MISSILES_EV_BONUS : 0);
+    if (mi.is(MB_PHASE_SHIFT) && !you.can_see_invisible())
+        ev += PHASE_SHIFT_EV_BONUS;
 
     if (ev <= 0)
-        return 1 - AUTO_MISS_CHANCE / 200.0;
+        return 1 - AUTO_MISS_CHANCE / 100.0;
 
     int hits = 0;
     for (int rolled_mhit = 0; rolled_mhit < to_land; rolled_mhit++)
     {
         // Apply post-roll manipulations:
         int adjusted_mhit = rolled_mhit + atk.post_roll_to_hit_modifiers(rolled_mhit, false);
+
+        // XXX: Duplicating the invis check in post_roll_to_hit_modifiers()
+        //      (which is otherwise skipped since the passed attack has no defender.)
+        if (mi.invisible_to_player())
+            adjusted_mhit -=6;
 
         // But the above will bail out because there's no defender in the attack object,
         // so we reproduce any possibly relevant effects here:
@@ -131,8 +138,8 @@ static double _to_hit_hit_chance(const monster_info& mi, attack &atk, bool melee
 
     double hit_chance = ((double)hits) / to_land;
     // Apply Bayes Theorem to account for auto hit and miss.
-    hit_chance = hit_chance * (1 - AUTO_MISS_CHANCE / 200.0)
-                 + (1 - hit_chance) * AUTO_HIT_CHANCE / 200.0;
+    hit_chance = hit_chance * (1 - AUTO_MISS_CHANCE / 100.0)
+                 + (1 - hit_chance) * AUTO_HIT_CHANCE / 100.0;
     return hit_chance;
 }
 
@@ -266,7 +273,7 @@ int mon_to_hit_pct(int to_land, int scaled_ev)
     for (int ev1 = 0; ev1 < ev; ev1++)
         for (int ev2 = 0; ev2 < ev; ev2++)
             hits_lower += max(0, to_land - (ev1 + ev2));
-    double hit_chance_lower = ((double)hits_lower) / (to_land * ev * ev);
+    double hit_chance_lower = ev ? ((double)hits_lower) / (to_land * ev * ev) : 1.0;
 
     int hits_upper = 0;
     for (int ev1 = 0; ev1 < ev+1; ev1++)
@@ -337,11 +344,10 @@ static bool _autoswitch_to_melee()
         return false;
 
     item_def* weapon = you.weapon();
-    bool penance;
     if (!weapon
         // don't autoswitch from a weapon that needs a warning
         || is_melee_weapon(*weapon)
-            && !needs_handle_warning(*weapon, OPER_ATTACK, penance))
+            && !needs_handle_warning(*weapon, OPER_ATTACK))
     {
         return false;
     }
@@ -358,7 +364,7 @@ static bool _autoswitch_to_melee()
     // don't autoswitch to a weapon that needs a warning, or to a non-weapon
     if (!you.inv[item_slot].defined()
         || !is_melee_weapon(you.inv[item_slot])
-        || needs_handle_warning(you.inv[item_slot], OPER_ATTACK, penance))
+        || needs_handle_warning(you.inv[item_slot], OPER_ATTACK))
     {
         return false;
     }
@@ -402,6 +408,41 @@ static void _do_medusa_stinger()
     you.did_trigger(DID_MEDUSA_STINGER);
 }
 
+static void _knight_pinning_attack(monster* mon)
+{
+    for (adjacent_iterator ai(mon->pos()); ai; ++ai)
+    {
+        if (monster* targ = monster_at(*ai))
+        {
+            if (could_harm_enemy(mon, targ) && monster_los_is_valid(mon, targ))
+            {
+                // Doesn't stack duration, but has a higher chance to refresh
+                // duration on already-bound monsters than to bind them initially.
+                if (targ->has_ench(ENCH_BOUND))
+                {
+                    if (!one_chance_in(10))
+                    {
+                        mon_enchant bind = targ->get_ench(ENCH_BOUND);
+                        bind.duration = max(20, bind.duration);
+                        targ->update_ench(bind);
+                    }
+                }
+                else if (!one_chance_in(3))
+                {
+                    if (you.can_see(*mon))
+                    {
+                        mprf("%s pins %s in place with %s attack.",
+                            mon->name(DESC_THE).c_str(),
+                            targ->name(DESC_THE).c_str(),
+                            mon->pronoun(PRONOUN_POSSESSIVE).c_str());
+                    }
+                    targ->add_ench(mon_enchant(ENCH_BOUND, mon, 20));
+                }
+            }
+        }
+    }
+}
+
 /**
  * Handle combat between the player and some monster. This is usually a standard
  * melee attack, but can also be a ranged attack performed at melee range.
@@ -429,6 +470,13 @@ bool player_fight(monster* defender, bool is_rampage,
         // If wielding a ranged weapon, perform a ranged attack instead.
         if (_can_shoot_with(you.weapon()) && !you.duration[DUR_CONFUSING_TOUCH])
         {
+            if (you.can_see(*defender)
+                && !check_warning_inscriptions(*you.weapon(), OPER_FIRE))
+            {
+                return false;
+            }
+
+            defender->sense_if_invisible();
             if (do_west_wind_shot())
                 return true;
             else if (do_player_ranged_attack(defender->pos()))
@@ -463,7 +511,7 @@ bool player_fight(monster* defender, bool is_rampage,
     if (is_rampage)
     {
         const int attack_delay = you.attack_delay().roll() * BASELINE_DELAY;
-        const int move_delay = player_movement_speed() * player_speed();
+        const int move_delay = player_overall_move_delay(BASELINE_DELAY);
         if (attack_delay > move_delay)
             attk.dmg_mult = (move_delay * 100 / attack_delay) - 100;
     }
@@ -576,6 +624,9 @@ bool mons_fight(monster *attacker, actor *defender, bool *did_hit, bool simu)
     // actions, rather than additional times for bonus attacks (ie: from Autumn Katana)
     if (attacker->type == MONS_PLATINUM_PARAGON)
         paragon_charge_up(*attacker);
+
+    if (attacker->type == MONS_ANCESTOR_KNIGHT && attacker->get_experience_level() >= 10)
+        _knight_pinning_attack(attacker);
 
     return true;
 }
@@ -924,11 +975,11 @@ int apply_chunked_AC(int dam, int ac)
 
 ///////////////////////////////////////////////////////////////////////////
 
-static bool _weapon_is_bad(const item_def *weapon, bool &penance)
+static bool _weapon_is_bad(const item_def *weapon)
 {
     if (!weapon)
         return false;
-    return needs_handle_warning(*weapon, OPER_ATTACK, penance)
+    return needs_handle_warning(*weapon, OPER_ATTACK)
            || !is_melee_weapon(*weapon) && !_can_shoot_with(weapon);
 }
 
@@ -976,13 +1027,12 @@ bool wielded_weapon_check(string attack_verb)
     if (you.received_weapon_warning || you.confused())
         return true;
 
-    bool penance = false;
-    const bool primary_bad = _weapon_is_bad(weapon, penance);
+    const bool primary_bad = _weapon_is_bad(weapon);
     // Important: check rangedness_matches *before* checking weapon_is_bad
     // for the offhand, so that we don't incorrectly claim you'll get penance
     // for a weapon that won't even attack!
     const bool offhand_bad = !_rangedness_matches(weapon, offhand)
-                             || _weapon_is_bad(offhand, penance);
+                             || _weapon_is_bad(offhand);
 
     if (!primary_bad && !offhand_bad && !_missing_weapon(weapon, offhand))
         return true;
@@ -993,8 +1043,6 @@ bool wielded_weapon_check(string attack_verb)
     prompt = make_stringf("Really %s while wielding %s?",
         attack_verb.size() ? attack_verb.c_str() : "attack",
         wpn_desc.c_str());
-    if (penance)
-        prompt += " This could place you under penance!";
 
     const bool result = yesno(prompt.c_str(), true, 'n');
 
@@ -1498,7 +1546,7 @@ bool stop_attack_prompt(targeter &hitfunc, const char* verb,
         }
     }
 
-    const bool hits_player = include_player && hitfunc.is_affected(you.pos());
+    const bool hits_player = include_player && hitfunc.is_affected(you.pos()) && affects(&you);
 
     if (victims.empty() && !hits_player)
         return false;
@@ -1564,6 +1612,7 @@ bool warn_about_bad_targets(const char* source_name, vector<coord_def> targets,
                             const char* msg)
 {
     vector<const monster*> bad_targets;
+    bool any_penance = false;
     for (coord_def p : targets)
     {
         const monster* mon = monster_at(p);
@@ -1581,7 +1630,10 @@ bool warn_about_bad_targets(const char* source_name, vector<coord_def> targets,
         string adj, suffix;
         bool penance;
         if (bad_attack(mon, adj, suffix, penance, you.pos()))
+        {
             bad_targets.push_back(mon);
+            any_penance = any_penance || penance;
+        }
     }
 
     if (bad_targets.empty())
@@ -1594,10 +1646,13 @@ bool warn_about_bad_targets(const char* source_name, vector<coord_def> targets,
     const string and_more = bad_targets.size() > 1 ?
             make_stringf(" (and %zu other bad targets)",
                          bad_targets.size() - 1) : "";
-    const string prompt = make_stringf("%s might hit %s%s. %s",
+    const string prompt = make_stringf("%s might hit %s%s.%s %s",
                                        source_name,
                                        ex_mon->name(DESC_THE).c_str(),
                                        and_more.c_str(),
+                                       any_penance
+                                       ? " This would place you under penance!"
+                                       : "",
                                        msg);
     if (!yesno(prompt.c_str(), false, 'n'))
     {

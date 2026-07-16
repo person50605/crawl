@@ -411,6 +411,12 @@ This creature has been briefly distracted by something else.
 
 [[low-tier stab monstatus]]
 %%%%
+out of phase monstatus
+
+This creature is slightly out of phase and has greatly increased evasion against
+those who lacks the ability to see invisible creatures. Their degree of injury
+is also hidden.
+%%%%
 paralysed monstatus
 
 This creature is unable to move, act, block, or dodge attacks.
@@ -588,6 +594,12 @@ This creature's spells are significantly weakened.
 stilling the winds monstatus
 
 This creature is preventing any clouds from being created on the current floor.
+%%%%
+stampeding monstatus
+
+This creature is moving in a single direction at incredible speed. Any enemies
+they run into will be pushed backwards and attacked with 50% bonus damage and
+increased accuracy.
 %%%%
 strong monstatus
 

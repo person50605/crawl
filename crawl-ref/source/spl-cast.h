@@ -72,6 +72,7 @@ enum class spret
     abort = 0,            // should be left as 0
     fail,
     success,
+    seen_hups,
     none,                 // spell was not handled
 };
 
@@ -89,6 +90,8 @@ enum class spret
 #define IOOD_TPOS "iood_tpos"
 
 #define INNATE_SPELLS_KEY "innate_spells"
+
+#define EXEGESIS_SPELL "exegesis_spell"
 
 #define fail_check() if (fail) return spret::fail
 

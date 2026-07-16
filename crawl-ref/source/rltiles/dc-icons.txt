@@ -53,6 +53,7 @@ confused CONFUSED
 sleeping STAB_BRAND
 pain_mirror PAIN_MIRROR
 recall RECALL
+corona GLOWING
 drain DRAIN
 idealised IDEALISED
 bound_soul BOUND_SOUL
@@ -122,6 +123,11 @@ tesseract_spawn TESSERACT_SPAWN
 sundering SUNDERING
 mute MUTE
 exposed EXPOSED
+stampede STAMPEDE
+invis_known UNSEEN_INVIS_KNOWN
+invis_remembered UNSEEN_INVIS_REMEMBERED
+seen_invis SEEN_INVIS
+phase_shifted PHASE_SHIFT
 
 something_under SOMETHING_UNDER
 new_stair NEW_STAIR

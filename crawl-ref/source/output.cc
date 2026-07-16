@@ -1130,7 +1130,7 @@ static void _print_stats_ev(int x, int y)
     CGOTOXY(x+4, y, GOTO_STAT);
 
     // Color EV based on whether temporary effects are raising or lowering it
-    const int bonus = you.evasion_scaled(100) - you.evasion_scaled(100, true);
+    const int bonus = you.evasion_scaled(100) - you.evasion_scaled(100, false);
     textcolour(bonus < 0 ? RED
                          : bonus > 0 ? LIGHTBLUE
                                      : HUD_VALUE_COLOUR);
@@ -1803,26 +1803,14 @@ static string _get_monster_name(const monster_info& mi, int count, bool fullname
     return desc;
 }
 
-// If past is true, the messages should be printed in the past tense
-// because they're needed for the morgue dump.
-string mpr_monster_list(bool past)
+static string _describe_from_list(string prefix,
+                                  const vector<monster_info>& mons)
 {
-    // Get monsters via the monster_pane_info, sorted by difficulty.
-    vector<monster_info> mons;
-    get_monster_info(mons);
-
-    string msg = "";
     if (mons.empty())
-    {
-        msg  = "There ";
-        msg += (past ? "were" : "are");
-        msg += " no monsters in sight!";
+        return "";
 
-        return msg;
-    }
-
+    string msg = prefix;
     vector<string> describe;
-
     int count = 0;
     for (unsigned int i = 0; i < mons.size(); ++i)
     {
@@ -1836,17 +1824,43 @@ string mpr_monster_list(bool past)
 
     describe.push_back(_get_monster_name(mons[mons.size()-1], count, true).c_str());
 
-    msg = "You ";
-    msg += (past ? "could" : "can");
-    msg += " see ";
-
     if (describe.size() == 1)
         msg += describe[0];
     else
         msg += comma_separated_line(describe.begin(), describe.end());
-    msg += ".";
 
     return msg;
+}
+
+// If past is true, the messages should be printed in the past tense
+// because they're needed for the morgue dump.
+string mpr_monster_list(bool past)
+{
+    // Get monsters via the monster_pane_info, sorted by difficulty.
+    // (But separate visible and invisible monsters, for better wording.)
+    vector<monster_info> mons;
+    vector<monster_info> invis_mons;
+    get_nearby_monster_info(mons, &invis_mons);
+
+    string msg = "";
+    if (mons.empty() && invis_mons.empty())
+    {
+        msg  = "There ";
+        msg += (past ? "were" : "are");
+        msg += " no monsters in sight!";
+
+        return msg;
+    }
+
+    string vis_describe = _describe_from_list(past ? "could see " : "can see ", mons);
+    string invis_describe = _describe_from_list(past ? "were aware of " : "are aware of ", invis_mons);
+
+    if (invis_describe.empty())
+        return "You " + vis_describe + ".";
+    else if (vis_describe.empty())
+        return "You " + invis_describe + ".";
+    else
+        return "You " + vis_describe + " and " + invis_describe + ".";
 }
 
 #ifndef USE_TILE_LOCAL
@@ -1889,11 +1903,15 @@ static void _print_next_monster_desc(const vector<monster_info>& mons,
             CPRINTF(" ");
 
             monster_info mi = mons[start];
+            colour_t dam_col = dam_colour(mi);
+            if (dam_col != BLACK)
+            {
 #ifdef TARGET_OS_WINDOWS
-            textcolour(real_colour(dam_colour(mi) | COLFLAG_ITEM_HEAP, mi.pos));
+                textcolour(real_colour(dam_col | COLFLAG_ITEM_HEAP, mi.pos));
 #else
-            textcolour(real_colour(dam_colour(mi) | COLFLAG_REVERSE, mi.pos));
+                textcolour(real_colour(dam_col | COLFLAG_REVERSE, mi.pos));
 #endif
+            }
             CPRINTF(" ");
             textbackground(BLACK);
             textcolour(LIGHTGREY);
@@ -1907,21 +1925,21 @@ static void _print_next_monster_desc(const vector<monster_info>& mons,
             printed += 2;
         }
 
-        if (printed < crawl_view.mlistsz.x)
+        int available = crawl_view.mlistsz.x - printed;
+        if (available > 0)
         {
             int desc_colour;
             string desc;
             mons_to_string_pane(desc, desc_colour, zombified,
                                 mons, start, count);
             textcolour(desc_colour);
-            if (static_cast<int>(desc.length()) > crawl_view.mlistsz.x - printed)
+            if (strwidth(desc) > available && available > 1)
             {
-                ASSERT(crawl_view.mlistsz.x - 2 - printed >= 0);
-                desc.resize(crawl_view.mlistsz.x - 2 - printed, ' ');
+                desc = chop_string(desc, available - 2);
                 desc += "…)";
             }
             else
-                desc.resize(crawl_view.mlistsz.x - printed, ' ');
+                desc = chop_string(desc, available);
             CPRINTF("%s", desc.c_str());
         }
     }
@@ -1951,7 +1969,7 @@ int update_monster_pane()
         save_cursor_pos save;
 
         vector<monster_info> mons;
-        get_monster_info(mons);
+        get_nearby_monster_info(mons);
 
         // Count how many groups of monsters there are.
         unsigned int lines_needed = mons.size();
@@ -2871,7 +2889,7 @@ static string _status_mut_rune_list(int sw)
             status.emplace_back(inf.short_text);
     }
 
-    int move_cost = (player_speed() * player_movement_speed()) / 10;
+    int move_cost = player_overall_move_delay(1, true, true, false);
     if (move_cost != 10)
     {
         const char *help = (move_cost <   8) ? "very quick" :

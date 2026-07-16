@@ -435,18 +435,28 @@ void xom_tick()
 
         // ...but They get bored...
         _calculate_exploration_estimate(true);
-        if (you.gift_timeout > 0 && you.explore_estimate > 5 && coinflip())
+        if (you.gift_timeout > 0 && you.explore_estimate > 5 && coinflip() &&
+            !player_on_orb_run())
         {
             you.gift_timeout--;
             // Especially if the floor's mostly done.
             if (you.explore_estimate >= 85)
-                you.gift_timeout = max(you.gift_timeout - 5, 0);
-        }
+                you.gift_timeout = max(you.gift_timeout - 2, 0);
 
-        if (you.explore_estimate >= 85 && you.gift_timeout <= 15 ||
-            you.gift_timeout == 1)
-        {
-            simple_god_message(" is getting BORED.");
+            // Xom gives between 6 and 2 warnings of reaching bottom boredom,
+            // fuzzed to make each deincrement make the warning more likely
+            // until it's guaranteed at the last two: much more useful as a
+            // less spammy warning than the previous detached state.
+            int min_bored = you.explore_estimate >= 85 ? you.gift_timeout / 3
+                                                       : you.gift_timeout;
+
+            if (min_bored <= 6 && x_chance_in_y(4, min_bored + 2))
+            {
+                if (min_bored > 2)
+                    simple_god_message(" is getting Bored.");
+                else if (you.gift_timeout > 0)
+                    simple_god_message(" is getting VERY BORED.");
+            }
         }
 
         new_xom_favour = describe_xom_favour();
@@ -1551,8 +1561,8 @@ static void _xom_lights_up_webs(int /*sever*/)
         place_cloud(CLOUD_FIRE, pos, blaze_time, nullptr, 0);
 
         webs_count++;
-        env.map_knowledge(pos).set_feature(DNGN_FLOOR);
         dungeon_terrain_changed(pos, DNGN_FLOOR);
+        update_terrain_knowledge(pos);
 
         if (actor* act = actor_at(pos))
             if (act->caught_by() == CAUGHT_WEB)
@@ -2060,10 +2070,8 @@ static void _xom_give_mutations(bool good)
 
     for (int i = num_tries; i > 0; --i)
     {
-        // One bad mutation guaranteed when under Xom wrath,
-        // or if you're on a nearly-full-explored floor while They're bored.
-        if (i == num_tries && !good && (you.penance[GOD_XOM] ||
-            _bored_explore_estimate(95)))
+        // One bad mutation guaranteed when under Xom wrath.
+        if (i == num_tries && !good && you.penance[GOD_XOM])
         {
             if (!mutate(RANDOM_BAD_MUTATION, "Xom's mischief",
                         failMsg, false, true, false, MUTCLASS_NORMAL))
@@ -2095,6 +2103,7 @@ static void _xom_drop_lightning()
     beam.target       = you.pos();
     beam.name         = "blast of lightning";
     beam.colour       = LIGHTCYAN;
+    beam.tile_explode = TILE_BOLT_ELECTRIC_BLAST;
     beam.thrower      = KILL_NON_ACTOR;
     beam.source_id    = MID_NOBODY;
     beam.aux_source   = "Xom's lightning strike";
@@ -2119,6 +2128,7 @@ static void _xom_spray_lightning(coord_def position)
         beam.target.x     += random_range(-1, 1);
         beam.target.y     += random_range(-1, 1);
     }
+    beam.tile_beam    = TILE_BOLT_STRONG_ELEC;
     beam.thrower      = KILL_NON_ACTOR;
     beam.source_id    = MID_NOBODY;
     beam.aux_source   = "Xom's lightning strike";
@@ -2311,6 +2321,11 @@ static void _xom_summon_butterflies()
     }
 }
 
+static void _change_scenery_square(coord_def pos, dungeon_feature_type type)
+{
+    dungeon_terrain_changed(pos, type, false, true, false, true);
+}
+
 // Mess with nearby terrain features, mostly harmlessly.
 static void _xom_change_scenery(int /*sever*/)
 {
@@ -2344,8 +2359,7 @@ static void _xom_change_scenery(int /*sever*/)
             if (x_chance_in_y(fountains_blood, 3))
                 continue;
 
-            env.grid(pos) = DNGN_FOUNTAIN_BLOOD;
-            set_terrain_changed(pos);
+            _change_scenery_square(pos, DNGN_FOUNTAIN_BLOOD);
             if (you.see_cell(pos))
                 fountains_blood++;
             break;
@@ -2356,12 +2370,11 @@ static void _xom_change_scenery(int /*sever*/)
                 continue;
 
             if (env.grid(pos) == DNGN_CACHE_OF_FRUIT)
-                env.grid(pos) = DNGN_CACHE_OF_MEAT;
+                _change_scenery_square(pos, DNGN_CACHE_OF_MEAT);
             else if (env.grid(pos) == DNGN_CACHE_OF_MEAT)
-                env.grid(pos) = DNGN_CACHE_OF_BAKED_GOODS;
+                _change_scenery_square(pos, DNGN_CACHE_OF_BAKED_GOODS);
             else
-                env.grid(pos) = DNGN_CACHE_OF_FRUIT;
-            set_terrain_changed(pos);
+                _change_scenery_square(pos, DNGN_CACHE_OF_FRUIT);
             if (you.see_cell(pos))
                 food_swapped++;
             break;
@@ -2370,8 +2383,7 @@ static void _xom_change_scenery(int /*sever*/)
             if (x_chance_in_y(trees_polymorphed, 3))
                 continue;
 
-            env.grid(pos) = wtree;
-            set_terrain_changed(pos);
+            _change_scenery_square(pos, wtree);
             if (you.see_cell(pos))
                 trees_polymorphed++;
             break;
@@ -2380,8 +2392,7 @@ static void _xom_change_scenery(int /*sever*/)
             if (x_chance_in_y(trees_polymorphed, 3))
                 continue;
 
-            env.grid(pos) = btree;
-            set_terrain_changed(pos);
+            _change_scenery_square(pos, btree);
             if (you.see_cell(pos))
                 trees_polymorphed++;
             break;
@@ -2458,14 +2469,12 @@ static void _xom_open_and_close_doors(int /* sever */)
         case DNGN_RUNED_DOOR:
         case DNGN_RUNED_CLEAR_DOOR:
             dgn_open_door(pos);
-            set_terrain_changed(pos);
             if (you.see_cell(pos))
                 doors_open++;
             break;
         case DNGN_OPEN_DOOR:
         case DNGN_OPEN_CLEAR_DOOR:
             dgn_close_door(pos);
-            set_terrain_changed(pos);
             if (you.see_cell(pos))
                 doors_close++;
             break;
@@ -2935,7 +2944,7 @@ static void _xom_wave_of_despair(int sever)
             dummy.type = MONS_HUMAN; // maybe random floor monsters? player genus?
             dummy.position = *di;
 
-            item_def* corpse = place_monster_corpse(dummy, true);
+            item_def* corpse = place_corpse_or_gold(dummy, true);
             if (corpse)
             {
                 turn_corpse_into_skeleton(*corpse);
@@ -4857,7 +4866,7 @@ static const vector<xom_event_data> _list_xom_good_actions = {
            }
 
            // Check if you have enough gold, increased by each trip.
-           if (you.gold < (900 + sv * (4 +
+           if (you.gold < (1000 + sv * (2 +
                           (you.props[XOM_BAZAAR_TRIP_COUNT].get_int() * 2))))
            {
               return false;
@@ -4873,7 +4882,7 @@ static const vector<xom_event_data> _list_xom_good_actions = {
            // Each bazaar trip reduces the chance of the next, unless things
            // are going badly enough it'd be funny to save the player.
            return tn > 28
-                 || (one_chance_in(you.props[XOM_BAZAAR_TRIP_COUNT].get_int() * 7));
+                 || (one_chance_in(you.props[XOM_BAZAAR_TRIP_COUNT].get_int() * 6));
         }
     },
     {
@@ -4881,15 +4890,15 @@ static const vector<xom_event_data> _list_xom_good_actions = {
         {return (random2(tn) < 5 // should really revise strategic benefits....
                  && x_chance_in_y(you.how_mutated(), 54)
                  && you.can_safely_mutate())
-                 && you.explore_estimate < 90;}
+                 && you.explore_estimate < 95;}
     },
     {
         XOM_GOOD_RANDOM_ITEM, 33, 775, [](int /*sv*/, int tn)
-        {return tn < 20 && you.explore_estimate < 90;}
+        {return tn < 20 && you.explore_estimate < 95;}
     },
     {
         XOM_GOOD_ACQUIREMENT, 21, 295, [](int /*sv*/, int tn)
-        {return tn < 20 && you.explore_estimate < 90;}
+        {return tn < 20 && you.explore_estimate < 95;}
     },
 };
 
@@ -4932,7 +4941,7 @@ static const vector<xom_event_data> _list_xom_bad_actions = {
         {
             const int explored = you.explore_estimate;
 
-            return ((!player_in_branch(BRANCH_ABYSS) || _teleportation_check()))
+            return ((!player_in_branch(BRANCH_ABYSS) && _teleportation_check()))
                  && !((_xom_feels_nasty() && (explored >= 40 || tn > 10))
                      || (explored >= 60 + random2(40)));
         }
@@ -5254,7 +5263,7 @@ void xom_take_action(xom_event_type action, int sever)
     {
         bool mostly_explored = _bored_explore_estimate(85);
         const int badness = _xom_event_badness(action);
-        const int interest = mostly_explored ? random2avg(badness * 20, 2)
+        const int interest = mostly_explored ? random2avg(badness * 45, 2)
                                              : random2avg(badness * 60, 2);
 
         if (mostly_explored)

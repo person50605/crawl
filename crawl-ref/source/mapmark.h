@@ -335,6 +335,7 @@ public:
 
 private:
     bool run_spike_launcher(int time);
+    bool run_mould_patch(int time);
 
 public:
     dungeon_feature_type feat;

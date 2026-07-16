@@ -17,6 +17,7 @@
 #include "env.h"
 #include "evoke.h"
 #include "fight.h"
+#include "god-item.h"
 #include "invent.h"
 #include "item-prop.h"
 #include "item-use.h"
@@ -296,6 +297,9 @@ namespace quiver
             if (!item.defined())
                 continue;
 
+            if (god_forbids_item(item))
+                continue;
+
             // =F prevents item from being in fire order.
             const maybe_bool i_check = _fireorder_inscription_ok(i_inv, true);
             if (!ignore_inscription_etc && bool(!i_check))
@@ -538,7 +542,7 @@ namespace quiver
                 if (you.cannot_move())
                 {
                     // XX duplicate code with movement.cc:move_player_action
-                    if (cancel_confused_move(true))
+                    if (!check_confused_move(true))
                         return;
 
                     if (!one_chance_in(3))
@@ -863,6 +867,9 @@ namespace quiver
             if (!is_valid())
                 return false;
 
+            if (god_forbids_item(you.inv[item_slot]))
+                return false;
+
             if (fire_warn_if_impossible(true, nullptr))
                 return false;
 
@@ -911,7 +918,13 @@ namespace quiver
                 return;
             if (!is_enabled())
             {
-                fire_warn_if_impossible(false, nullptr); // for messaging (TODO refactor; message about inscriptions?)
+                if (god_forbids_item(you.inv[item_slot]))
+                {
+                    mprf(MSGCH_GOD, "%s forbids the use of this item.",
+                         uppercase_first(god_name(you.religion)).c_str());
+                }
+                else
+                    fire_warn_if_impossible(false, nullptr); // for messaging (TODO refactor; message about inscriptions?)
                 return;
             }
             if (autofight_check() || !do_inscription_check())
@@ -1381,6 +1394,8 @@ namespace quiver
             case ABIL_STEAM_BREATH:
             case ABIL_NOXIOUS_BREATH:
             case ABIL_MUD_BREATH:
+            case ABIL_GOLDEN_BREATH:
+            case ABIL_BREATHE_RUST:
             case ABIL_DAMNATION:
             case ABIL_ELYVILON_HEAL_OTHER:
             case ABIL_LUGONU_BANISH:
@@ -1391,6 +1406,7 @@ namespace quiver
             case ABIL_USKAYAW_LINE_PASS:
             case ABIL_USKAYAW_GRAND_FINALE:
             case ABIL_WU_JIAN_WALLJUMP:
+            case ABIL_YRED_HURL_TORCHLIGHT:
             case ABIL_EVOKE_DISPATER:
             case ABIL_EVOKE_OLGREB:
 #ifdef WIZARD
@@ -1682,7 +1698,10 @@ namespace quiver
             if (!is_enabled())
             {
                 const item_def *item = item_slot == -1 ? nullptr : &you.inv[item_slot];
-                mpr(cannot_evoke_item_reason(item));
+                bool god_forbids = false;
+                const string reason = cannot_evoke_item_reason(item, true, true,
+                                                               &god_forbids);
+                mprf(god_forbids ? MSGCH_GOD : MSGCH_PLAIN, "%s", reason.c_str());
                 return;
             }
 
@@ -2620,12 +2639,17 @@ namespace quiver
                     first_abil += 1;
                 }
 
-                if (focus_mode != Focus::NONE)
+                // We use real letters for spells and abilities, but for items
+                // we use sequential letters, as we may have items sharing the
+                // same letter (e.g. a wand and a missile).
+                const bool use_real_letters = focus_mode != Focus::NONE
+                                              && i >= it_count;
+                if (use_real_letters)
                     hotkey = a->source_hotkey();
 
                 add_action(a, hotkey);
 
-                if (focus_mode == Focus::NONE)
+                if (!use_real_letters)
                     hotkey++;
                 i++;
             }

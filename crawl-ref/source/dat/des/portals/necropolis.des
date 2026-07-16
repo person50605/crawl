@@ -3646,7 +3646,6 @@ ENDMAP
 
 # Map inspired by trog_three_pillars_becter
 NAME:    gammafunk_necropolis_ghost_wrathful_warriors
-WEIGHT:  999999
 : necropolis_depth_tagging(_G, {"pre_lair_d", "lair", "post_lair_d",
 :                               "orc", "snake", "shoals", "swamp",
 :                               "vaults_elf", "depths_crypt"})
@@ -4507,7 +4506,7 @@ ITEM:    any magical staff / quarterstaff randart ego:spectral w:5 pre_id / \
          dagger randart plus:9 pre_id w:5 / rapier good_item / \
          randbook disc:hexes disc2:summoning spells:summon_forest numspells:3 / \
          swamp dragon scales no_pickup / any ally scroll q:2 pre_id
-ITEM:    any staff randart artprops:Hexes / \
+ITEM:    any magical staff randart artprops:Hexes / \
          lajatang randart ego:spectral w:5 pre_id / \
          athame randart w:2 / quick blade good_item / \
          randbook disc:hexes disc2:summoning spells:summon_forest numspells:6 / \
@@ -4695,7 +4694,7 @@ NSUBST:  ' = 1:1 / 1:2 / *:', " = 2:1 / *:"
 NSUBST:  $ = 2:d / *:%, * = 1:e / 1:f, % = 2:* / *:%
 : end
 KMONS:   O = player ghost
-ITEM:    dagger ego:vamprism pre_id / falchion ego:vampirism pre_id / \
+ITEM:    dagger ego:vampirism pre_id / falchion ego:vampirism pre_id / \
          potion of curing q:1 pre_id w:20 / scroll of fog q:1 pre_id w:5 / \
          amulet of regeneration pre_id w:5
 ITEM:    rapier ego:vampirism pre_id / scimitar ego:vampirism pre_id / \
@@ -4754,7 +4753,7 @@ SUBST:   ?! = %
 KMONS:   O = player ghost
 ITEM:    staff of fire / staff of necromancy / quarterstaff ego:spectral / \
          quarterstaff ego:pain / any ring randart artprops:rN pre_id w:15
-ITEM:    staff of fire randart / staff of pain randart / \
+ITEM:    staff of fire randart / staff of necromancy randart / \
          lajatang ego:spectral / lajatang ego:pain / \
          any amulet randart artprops:Regen&&rN pre_id w:15
 ITEM:    scarab talisman, scarab talisman randart

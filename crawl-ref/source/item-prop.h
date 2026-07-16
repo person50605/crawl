@@ -149,7 +149,6 @@ int weapon_rarity(int w_type) IMMUTABLE;
 bool is_weapon_too_large(const item_def &item, size_type size) PURE;
 
 hands_reqd_type basic_hands_reqd(const item_def &item, size_type size) PURE;
-hands_reqd_type hands_reqd(const actor* ac, object_class_type base_type, int sub_type);
 
 bool is_giant_club_type(int wpn_type) IMMUTABLE;
 bool is_ranged_weapon_type(int wpn_type) IMMUTABLE;
@@ -289,6 +288,7 @@ inline constexpr bool item_type_is_equipment(object_class_type base_type)
                || base_type == OBJ_GIZMOS;
 }
 
+vector<equipment_slot> item_granted_slots(const item_def& item);
 bool item_gives_equip_slots(const item_def& item);
 
 bool item_grants_flight(const item_def& item);

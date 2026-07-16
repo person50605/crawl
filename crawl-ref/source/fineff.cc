@@ -47,6 +47,7 @@
 #include "state.h"
 #include "stringutil.h"
 #include "terrain.h"
+#include "rltiles/tiledef-main.h"
 #include "transform.h"
 #include "view.h"
 
@@ -356,7 +357,6 @@ public:
     bennu_revive_fineff(const monster* bennu)
         : final_effect(bennu, 0, bennu->pos())
     {
-        env.final_effect_monster_cache.push_back(*bennu);
     }
 protected:
     // Each trigger is from the death of a different bennu---no merging.
@@ -401,9 +401,10 @@ public:
 
     make_derived_undead_fineff(coord_def pos, mgen_data _mg, int _xl,
         const string& _agent, const string& _msg,
-        bool _act_immediately)
+        function<bool ()> _should_trigger, bool _act_immediately)
         : final_effect(0, 0, pos), mg(_mg), experience_level(_xl),
-        agent(_agent), message(_msg), act_immediately(_act_immediately)
+        agent(_agent), message(_msg), should_trigger(_should_trigger),
+        act_immediately(_act_immediately)
     {
     }
 protected:
@@ -413,6 +414,7 @@ protected:
     int experience_level;
     string agent;
     string message;
+    function<bool ()> should_trigger;
     bool act_immediately;
 };
 
@@ -425,8 +427,6 @@ public:
         : final_effect(fixup_attacker(attack), 0, coord_def()),
         killer(_killer), pow(_pow)
     {
-        // Cache the dying mummy so morgues can look up the monster source if it kills us.
-        env.final_effect_monster_cache.push_back(*source);
         dead_mummy = source->mid;
     }
 protected:
@@ -560,10 +560,6 @@ public:
         : final_effect(agent, nullptr, you.pos()), power(_power), max_stars(_max),
                                                    is_star_jelly(_is_star_jelly)
     {
-        // If this is a star jelly, cache it (even if it's not dead yet; since
-        // it may die to further damage events within the same attack action.)
-        if (is_star_jelly)
-            env.final_effect_monster_cache.push_back(*agent->as_monster());
     }
 protected:
     bool mergeable(const final_effect&) const override { return false; }
@@ -611,6 +607,21 @@ public:
 protected:
     bool mergeable(const final_effect&) const override { return true; }
 };
+
+class psychokinetic_burst_fineff : public final_effect
+{
+public:
+    void fire() override;
+
+    psychokinetic_burst_fineff(actor* agent)
+        : final_effect(agent, nullptr, you.pos())
+    {
+        ASSERT(agent->is_monster());
+    }
+protected:
+    bool mergeable(const final_effect&) const override { return false; }
+};
+
 
 // Things to happen when the current attack/etc finishes.
 static vector<final_effect*> _final_effects;
@@ -750,10 +761,12 @@ void schedule_infestation_death_fineff(coord_def pos, const string& name)
 void schedule_make_derived_undead_fineff(coord_def pos, mgen_data mg, int xl,
                                          const string& agent,
                                          const string& msg,
+                                         function<bool ()> should_trigger,
                                          bool act_immediately)
 {
     _schedule_final_effect(new make_derived_undead_fineff(pos, mg, xl, agent,
                                                           msg,
+                                                          should_trigger,
                                                           act_immediately));
 }
 
@@ -833,6 +846,11 @@ void schedule_celebrant_bloodrite_fineff()
 void schedule_eeljolt_fineff()
 {
     _schedule_final_effect(new eeljolt_fineff());
+}
+
+void schedule_psychokinetic_burst_fineff(actor* agent)
+{
+    _schedule_final_effect(new psychokinetic_burst_fineff(agent));
 }
 
 bool mirror_damage_fineff::mergeable(const final_effect &fe) const
@@ -1326,10 +1344,14 @@ void shock_discharge_fineff::fire()
     }
 
     bolt beam;
-    beam.flavour = BEAM_ELECTRICITY;
+    beam.flavour   = BEAM_ELECTRICITY;
+    beam.tile_beam = power < 4 ? TILE_BOLT_WEAK_ELEC : TILE_BOLT_STRONG_ELEC;
+    int dur = power < 4 ? 20 : 30;
     const string name = serpent && serpent->alive_or_reviving() ?
                         serpent->name(DESC_A, true) :
                         "a shock serpent"; // dubious
+
+    flash_tile(oppressor.pos(), CYAN, dur, beam.tile_beam);
     oppressor.hurt(serpent, final_dmg, beam.flavour, KILLED_BY_BEAM,
                    name.c_str(), shock_source.c_str());
 
@@ -1358,11 +1380,6 @@ void explosion_fineff::fire()
         else
             mprf(MSGCH_MONSTER_DAMAGE, MDAM_DEAD, "%s", boom_message.c_str());
     }
-
-    if (typ == EXPLOSION_FINEFF_INNER_FLAME)
-        for (adjacent_iterator ai(beam.target, false); ai; ++ai)
-            if (!one_chance_in(5))
-                place_cloud(CLOUD_FIRE, *ai, 10 + random2(10), flame_agent);
 
     beam.explode(true, typ == EXPLOSION_FINEFF_PYROMANIA);
 
@@ -1439,7 +1456,7 @@ void bennu_revive_fineff::fire()
 {
     bool res_visible = you.see_cell(posn);
 
-    const monster* orig = cached_monster_copy_by_mid(att);
+    const monster* orig = monster_by_mid(att, false, /*allow_dead=*/true);
 
     monster *newmons = create_monster(mgen_data(MONS_BENNU, BEH_HOSTILE, posn, orig->foe,
                                                 res_visible ? MG_DONT_COME
@@ -1487,6 +1504,9 @@ void infestation_death_fineff::fire()
 
 void make_derived_undead_fineff::fire()
 {
+    if (!should_trigger())
+        return;
+
     monster *undead = create_monster(mg);
     if (!undead)
         return;
@@ -1569,9 +1589,9 @@ void mummy_death_curse_fineff::fire()
         mprf(MSGCH_MONSTER_SPELL, "A malignant aura surrounds %s.",
              victim->name(DESC_THE).c_str());
     }
-    // The real mummy is dead, but we pass along a cached copy save at the time
-    // they died (for morgue purposes)
-    death_curse(*victim, cached_monster_copy_by_mid(dead_mummy), "", pow);
+    // The real mummy is dead, but it stays findable by mid until its deferred
+    // reset, so morgue code can still name the source.
+    death_curse(*victim, monster_by_mid(dead_mummy, false, /*allow_dead=*/true), "", pow);
 }
 
 void summon_dismissal_fineff::fire()
@@ -1690,11 +1710,7 @@ void detonation_fineff::fire()
 
 void stardust_fineff::fire()
 {
-    actor* agent = actor_by_mid(att);
-
-    // In case the agent is dead, check for a cached copy.
-    if (!agent)
-        agent = cached_monster_copy_by_mid(att);
+    actor* agent = actor_by_mid(att, false, /*allow_dead=*/true);
     if (!agent)
         return;
 
@@ -1847,6 +1863,40 @@ void eeljolt_fineff::fire()
     do_eel_arcjolt();
 }
 
+void psychokinetic_burst_fineff::fire()
+{
+    // The agent may be dead, but stays findable by mid until its deferred reset.
+    monster* agent = monster_by_mid(att, false, /*allow_dead=*/true);
+    if (!agent)
+        return;
+
+    simple_monster_message(*agent, " unleashes a burst of psychic force!", false, MSGCH_MONSTER_SPELL);
+
+    const coord_def source = agent->pos();
+    vector<actor*> act_list;
+    for (actor_near_iterator ai(source, LOS_NO_TRANS); ai; ++ai)
+    {
+        if (ai->pos().distance_from(you.pos()) > 4 || ai->pos() == source)
+            continue;
+
+        act_list.push_back(*ai);
+    }
+
+    if (you.see_cell(source))
+        draw_ring_animation(source, LOS_RADIUS, BLUE, LIGHTBLUE, true, 5);
+
+    far_to_near_sorter sorter = { source };
+    sort(act_list.begin(), act_list.end(), sorter);
+
+    for (actor *act : act_list)
+        if (cell_see_cell(source, act->pos(), LOS_NO_TRANS)) // sanity check vs dispersal
+            act->knockback(*agent, random_range(6, 7) - grid_distance(act->pos(), source), 0, "psychic force");
+
+    for (actor *act : act_list)
+        if (!mons_aligned(agent, act) && act->willpower() != WILL_INVULN)
+            act->confuse(agent, random_range(2, 5));
+}
+
 // Effects that occur after all other effects, even if the monster is dead.
 // For example, explosions that would hit other creatures, but we want
 // to deal with only one creature at a time, so that's handled last.
@@ -1860,8 +1910,8 @@ void fire_final_effects()
         eff->fire();
     }
 
-    // Clear all cached monster copies
-    env.final_effect_monster_cache.clear();
+    // Free the slots of monsters that died or left the level during this turn.
+    flush_monster_reset();
 }
 
 void clear_final_effects()

@@ -28,7 +28,7 @@ public:
 class monster_view_annotator
 {
 public:
-    monster_view_annotator(vector<monster *> *monsters);
+    monster_view_annotator(vector<coord_def> *pos);
     virtual ~monster_view_annotator();
 };
 
@@ -286,6 +286,10 @@ private:
     targeter *hitfunc;         // Determine what would be hit.
     bool is_ranged_attack;     // Is this a launcher/throwing attack being aimed?
     bool is_piercing;          // If a ranged attack, does it penetrate targets?
+    bool is_autotargeting;     // True if this is getting a default target
+                               // non-interactively which using autofight with
+                               // quivered spells (and thus we should be more
+                               // stringent about only returning useful paths).
     coord_def default_place;    // Start somewhere other than you.pos()?
 
     // Internal data.
@@ -341,6 +345,7 @@ public:
 // Monster equipment description level.
 enum mons_equip_desc_level_type
 {
+    DESC_NO_EQUIPMENT,
     DESC_WEAPON,
     DESC_NOTEWORTHY,
     DESC_NOTEWORTHY_AND_WEAPON,
@@ -378,6 +383,7 @@ string feature_description(dungeon_feature_type grid,
 
 vector<dungeon_feature_type> features_by_desc(const base_pattern &pattern);
 
+bool is_terrain_interesting(dungeon_feature_type feat);
 void full_describe_view();
 void do_look_around(const coord_def &whence = coord_def(0, 0));
 bool get_look_position(coord_def *c);

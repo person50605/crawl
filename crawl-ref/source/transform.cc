@@ -69,10 +69,6 @@ static constexpr int EQF_HELD = SLOTF(SLOT_WEAPON) | SLOTF(SLOT_OFFHAND)
 static constexpr int EQF_AUXES = SLOTF(SLOT_GLOVES) | SLOTF(SLOT_BOOTS)
                                  | SLOTF(SLOT_BARDING)
                                  | SLOTF(SLOT_CLOAK) | SLOTF(SLOT_HELMET);
-// core body slots (statue form)
-static constexpr int EQF_STATUE = SLOTF(SLOT_GLOVES) | SLOTF(SLOT_BOOTS)
-                                  | SLOTF(SLOT_BARDING)
-                                  | SLOTF(SLOT_BODY_ARMOUR);
 // everything you can (W)ear
 static constexpr int EQF_WEAR = EQF_AUXES | SLOTF(SLOT_BODY_ARMOUR)
                             | SLOTF(SLOT_OFFHAND) | SLOTF(SLOT_WEAPON_OR_OFFHAND);
@@ -172,6 +168,7 @@ Form::Form(const form_entry &fe)
       changes_anatomy(fe.changes_anatomy),
       changes_substance(fe.changes_substance),
       holiness(fe.holiness),
+      undead_state(fe.undead_state),
       is_badform(fe.is_badform),
       has_blood(fe.has_blood), has_hair(fe.has_hair),
       has_bones(fe.has_bones), has_feet(fe.has_feet),
@@ -1848,9 +1845,6 @@ string cant_transform_reason(transformation which_trans,
     if (you.transform_uncancellable && which_trans != transformation::slaughter)
         return "You are stuck in your current form!";
 
-    if (which_trans == transformation::death && you.duration[DUR_DEATHS_DOOR])
-        return "You cannot mock death while in death's door.";
-
     return "";
 }
 
@@ -1894,6 +1888,17 @@ bool check_transform_into(transformation which_trans, bool involuntary,
     {
         if (!yesno("This transformation would significantly lower your maximum hit points. "
                   "Transform anyway?", true, 'n'))
+        {
+            return false;
+        }
+    }
+
+    if (!involuntary && you.duration[DUR_DEATHS_DOOR]
+                     && (which_trans == transformation::vampire
+                        || which_trans == transformation::death))
+    {
+        if (!yesno("Becoming undead will pull you out of death's doorway! "
+                   "Transform anyway?", true, 'n'))
         {
             return false;
         }
@@ -1950,9 +1955,14 @@ static void _on_enter_form(transformation which_trans)
         break;
 
     case transformation::death:
+        you.duration[DUR_DEATHS_DOOR] = 0;
         you.redraw_status_lights = true;
         _print_death_brand_changes(you.weapon(), true);
         _print_death_brand_changes(you.offhand_weapon(), true);
+        break;
+
+    case transformation::vampire:
+        you.duration[DUR_DEATHS_DOOR] = 0;
         break;
 
     case transformation::maw:
@@ -2030,6 +2040,14 @@ static void _enter_form(int dur, transformation which_trans, bool using_talisman
     {
         mpr("Your mandibles meld away.");
         you.digging = false;
+    }
+
+    if ((you.is_nonliving() || you.is_lifeless_undead())
+        && you.duration[DUR_POISONING])
+    {
+        you.duration[DUR_POISONING] = 0;
+        mprf(MSGCH_RECOVERY, "You are no longer poisoned.");
+        you.redraw_hit_points = true;
     }
 
     _on_enter_form(which_trans);
@@ -2440,19 +2458,14 @@ void set_default_form(transformation t, const item_def *talisman)
 
             unequip_artefact_effect(*old_talisman, nullptr, false);
         }
-        item_skills(*old_talisman, you.skills_to_hide);
     }
 
     if (talisman)
     {
         ASSERT(in_inventory(*talisman));
         you.cur_talisman = talisman->link;
-        item_skills(*talisman, you.skills_to_show);
     }
 
-    // This has to be done after checking item skills, otherwise the new active
-    // talisman might count as a useless item (the you.form != you.default_form
-    // check in cannot_evoke_item_reason)
     you.default_form = t;
 }
 

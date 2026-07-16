@@ -41,7 +41,9 @@
 #include "level-state-type.h"
 #include "libutil.h"
 #include "losglobal.h"
+#include "los.h"
 #include "makeitem.h"
+#include "map-knowledge.h"
 #include "mapmark.h"
 #include "message.h"
 #include "misc.h"
@@ -145,6 +147,7 @@ static ai_action::goodness _foe_near_lava(const monster &caster);
 static ai_action::goodness _mons_likes_blinking(const monster &caster);
 static ai_action::goodness _mesmerise_is_effective(monster* mons, bool check_hearing);
 static ai_action::goodness _spike_launcher_goodness(const monster& caster);
+static ai_action::goodness _stampede_goodness(const monster& caster);
 static void _cast_injury_mirror(monster &mons, mon_spell_slot, bolt&);
 static void _cast_smiting(monster &mons, mon_spell_slot slot, bolt&);
 static void _cast_brain_bite(monster &mons, mon_spell_slot slot, bolt&);
@@ -196,6 +199,7 @@ static bool _cast_dominate_undead(const monster& caster, int pow, bool check_onl
 static bool _mon_cast_tempering(const monster& caster, bool check_only);
 static coord_def _mons_boulder_tracer(const monster* mons);
 static bool _mons_splinterfrost_shell(const monster& caster, bool check_only = false);
+static void _mons_start_stampede(monster& caster);
 
 enum spell_logic_flag
 {
@@ -240,13 +244,61 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
     } },
     { SPELL_INVISIBILITY, {
         _should_selfench(ENCH_INVIS),
-        _fire_simple_beam,
+        [](monster &caster, mon_spell_slot, bolt& beam)
+        {
+            beam.fire();
+
+            coord_def spot;
+            int count = 0;
+            monster_pathfind path;
+            path.fill_traversability(&caster, 2, true);
+            for (radius_iterator ri(caster.pos(), 2, C_SQUARE); ri; ++ri)
+            {
+                if (path.is_reachable(*ri) && one_chance_in(++count))
+                    spot = *ri;
+            }
+            if (!spot.origin())
+                caster.move_to(spot);
+        },
         _selfench_beam_setup(BEAM_INVISIBILITY),
     } },
     { SPELL_HASTE, {
         _should_selfench(ENCH_HASTE),
         _fire_simple_beam,
         _selfench_beam_setup(BEAM_HASTE),
+    } },
+    { SPELL_BOLSTER, {
+        [](const monster &caster)
+        {
+            return ai_action::good_or_bad(!caster.has_ench(ENCH_MIGHT)
+                                          || !caster.has_ench(ENCH_RESISTANCE));
+        },
+        [](monster &caster, mon_spell_slot, bolt&)
+        {
+            simple_monster_message(caster, " vitality is bolstered.", true);
+            flash_tile(caster.pos(), LIGHTBLUE);
+            const int dur = random_range(220, 300);
+            caster.add_ench(mon_enchant(ENCH_MIGHT, &caster, dur));
+            caster.add_ench(mon_enchant(ENCH_RESISTANCE, &caster, dur));
+        },
+        nullptr,
+    } },
+    { SPELL_PHASE_SHIFT, {
+        [](const monster &caster)
+        {
+            return ai_action::good_or_bad(!caster.has_ench(ENCH_PHASE_SHIFT));
+        },
+        [](monster &caster, mon_spell_slot, bolt&)
+        {
+            if (!you.can_see_invisible())
+                simple_monster_message(caster, " form blurs.", true);
+            else
+                simple_monster_message(caster, " form wavers for a moment.", true);
+            flash_tile(caster.pos(), LIGHTBLUE);
+            const int dur = random_range(220, 300);
+            caster.add_ench(mon_enchant(ENCH_PHASE_SHIFT, &caster, dur));
+        },
+        nullptr,
     } },
     { SPELL_MINOR_HEALING, {
         [](const monster &caster) {
@@ -405,7 +457,17 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
                 mprf("%s liquefies the ground around %s!",
                      caster.name(DESC_THE).c_str(),
                      caster.pronoun(PRONOUN_REFLEXIVE).c_str());
-                flash_view_delay(UA_MONSTER, BROWN, 80);
+
+                for (radius_iterator ri(caster.pos(), 5, C_SQUARE, LOS_NO_TRANS); ri; ++ri)
+                {
+                    if (you.see_cell(*ri) && (*ri == caster.pos()
+                        || feat_has_solid_floor(env.grid(*ri))
+                        && !feat_is_shallow_water((env.grid(*ri)))))
+                    {
+                        flash_tile(*ri, BROWN, 0, TILE_BOLT_LIQUEFY_BROWN);
+                    }
+                }
+                animation_delay(140, true);
             }
 
             caster.add_ench(ENCH_LIQUEFYING);
@@ -499,7 +561,13 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
         _caster_sees_foe,
         [](monster &caster, mon_spell_slot slot, bolt&) {
             flash_tile(caster.get_foe()->pos(), MAGENTA, 120, TILE_BOLT_ANTIMAGIC_GAZE);
+            actor* foe = caster.get_foe();
             caster.get_foe()->drain_magic(&caster, mons_spellpower(caster, slot.spell));
+
+            // It isn't worth being exhaustive about this sort of thing, but this
+            // is by far one of the most common scenarios, and worth the UI hint.
+            if (foe->is_player())
+                caster.sense_if_invisible(false);
         },
     } },
     { SPELL_WEAKENING_GAZE, {
@@ -844,7 +912,7 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
             if (you.can_see(caster))
             {
                 targeter_radius hitfunc(&caster, LOS_SOLID, 2);
-                flash_view_delay(UA_MONSTER, DARKGREY, 200, &hitfunc);
+                flash_view_delay(UA_MONSTER, DARKGREY, 200, 0, &hitfunc);
                 mprf("%s draws nearby shadows into %s.",
                     caster.name(DESC_THE).c_str(),
                     caster.pronoun(PRONOUN_REFLEXIVE).c_str());
@@ -1070,6 +1138,12 @@ static const map<spell_type, mons_spell_logic> spell_to_logic = {
         },
         [](monster& caster, mon_spell_slot, bolt&) {
             _mons_splinterfrost_shell(caster);
+        }
+    } },
+    { SPELL_STAMPEDE, {
+        _stampede_goodness,
+       [](monster &caster, mon_spell_slot, bolt&) {
+            _mons_start_stampede(caster);
         }
     } },
 };
@@ -1618,6 +1692,32 @@ static void _cast_regenerate_other(monster* caster)
     }
 }
 
+static void _cast_touch_of_paradox(monster* caster)
+{
+    int seen = 0;
+    monster* targ = nullptr;
+
+    for (monster_near_iterator mi(caster, LOS_NO_TRANS); mi; ++mi)
+    {
+        if (*mi != caster && mons_aligned(caster, *mi)
+            && mons_has_attacks(*mi->as_monster())
+            && !mi->has_ench(ENCH_PARADOX_TOUCHED))
+        {
+            if (one_chance_in(++seen))
+                targ = *mi;
+        }
+    }
+
+    if (targ != nullptr)
+    {
+        const int pow = mons_spellpower(*caster, SPELL_TOUCH_OF_PARADOX);
+        int dur = (4 + roll_dice(2, pow / 20)) * BASELINE_DELAY;
+        flash_tile(targ->pos(), MAGENTA, 120, TILE_BOLT_CORRUPTION);
+        simple_monster_message(*targ, " is touched by paradox!");
+        targ->add_ench(mon_enchant(ENCH_PARADOX_TOUCHED, caster, dur));
+    }
+}
+
 static void _cast_mass_regeneration(monster* caster)
 {
     vector<monster*> targs;
@@ -1785,7 +1885,7 @@ static void _cast_siphon_essence(monster &caster, mon_spell_slot, bolt&)
     if (you.see_cell(caster.pos()))
     {
         targeter_radius hitfunc(&caster, LOS_SOLID, 2);
-        flash_view_delay(UA_MONSTER, DARKGREY, 200, &hitfunc);
+        flash_view_delay(UA_MONSTER, DARKGREY, 200, 0, &hitfunc);
         seen = true;
     }
 
@@ -2379,6 +2479,7 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
     case SPELL_STUNNING_BURST:
     case SPELL_MALIGN_OFFERING:
     case SPELL_BOLT_OF_DEVASTATION:
+    case SPELL_BOLT_OF_ANTIMAGIC:
     case SPELL_BORGNJORS_VILE_CLUTCH:
     case SPELL_CRYSTALLISING_SHOT:
     case SPELL_HELLFIRE_MORTAR:
@@ -2715,6 +2816,7 @@ bool setup_mons_cast(const monster* mons, bolt &pbolt, spell_type spell_cast,
     case SPELL_SUMMON_MANA_VIPER:
     case SPELL_SUMMON_SCORPIONS:
     case SPELL_SUMMON_EMPEROR_SCORPIONS:
+    case SPELL_MURKY_LEGION:
     case SPELL_BATTLECRY:
     case SPELL_WARNING_CRY:
     case SPELL_HUNTING_CALL:
@@ -2757,6 +2859,7 @@ bool setup_mons_cast(const monster* mons, bolt &pbolt, spell_type spell_cast,
     case SPELL_FUNERAL_DIRGE:
     case SPELL_MANIFOLD_ASSAULT:
     case SPELL_REGENERATE_OTHER:
+    case SPELL_TOUCH_OF_PARADOX:
     case SPELL_MASS_REGENERATION:
     case SPELL_BESTOW_ARMS:
     case SPELL_FULMINANT_PRISM:
@@ -3224,25 +3327,24 @@ static void _corrupt_locale(monster &mons)
     lugonu_corrupt_level_monster(mons);
 }
 
-static void _set_door(const vector<coord_def>& door, dungeon_feature_type feat)
-{
-    for (const auto &dc : door)
-    {
-        env.grid(dc) = feat;
-        set_terrain_changed(dc);
-    }
-}
-
 static int _tension_door_closed(const vector<coord_def>& door)
 {
     ASSERT(!door.empty());
     const dungeon_feature_type old_feat = env.grid(door[0]);
-    // this unwind is a bit heavy, but because out-of-los clouds dissipate
-    // instantly, they can be wiped out by these door tests.
-    unwind_var<map<coord_def, cloud_struct>> cloud_state(env.cloud);
-    _set_door(door, DNGN_CLOSED_DOOR);
+    // Simulate the tension with closed doors. We don't want to do a full
+    // terrain change, as this would have side effects like removing clouds,
+    // but we do need to invalidate the LoS cache.
+    for (coord_def dc : door)
+    {
+        env.grid(dc) = DNGN_CLOSED_DOOR;
+        los_terrain_changed(dc);
+    }
     const int new_tension = get_tension(GOD_NO_GOD);
-    _set_door(door, old_feat);
+    for (coord_def dc : door)
+    {
+        env.grid(dc) = old_feat;
+        los_terrain_changed(dc);
+    }
     return new_tension;
 }
 
@@ -3511,7 +3613,6 @@ static bool _seal_doors_and_stairs(const monster* warden,
             for (coord_def dc : door_spots)
             {
                 dgn_close_door(dc);
-                set_terrain_changed(dc);
                 dungeon_events.fire_position_event(DET_DOOR_CLOSED, dc);
 
                 if (is_excluded(dc))
@@ -3529,10 +3630,8 @@ static bool _seal_doors_and_stairs(const monster* warden,
                 {
                     if (env.map_knowledge(dc).seen())
                     {
-                        env.map_knowledge(dc).set_feature(DNGN_CLOSED_DOOR);
-#ifdef USE_TILE
-                        tile_env.bk_bg(dc) = TILE_DNGN_CLOSED_DOOR;
-#endif
+                        update_terrain_knowledge(dc);
+                        redraw_view_at(dc);
                     }
                 }
 
@@ -3803,7 +3902,7 @@ static ai_action::goodness _arcjolt_goodness(const monster &caster)
 
 static ai_action::goodness _scorch_goodness(const monster& caster)
 {
-    auto targeter = make_unique<targeter_scorch>(caster, 3, true);
+    auto targeter = make_unique<targeter_scorch>(caster, 3);
     for (auto ti = targeter->affected_iterator(AFF_MAYBE); ti; ++ti)
     {
         if (actor_at(*ti)->res_fire() < 3)
@@ -4153,6 +4252,9 @@ static bool _awaken_vines(monster* mon, bool test_only = false)
                         MG_FORCE_PLACE, mon->god)
             .set_summoned(mon, SPELL_AWAKEN_VINES, random_range(250, 380), false)))
         {
+            // Stash a tree position so that we can draw the vine connecting
+            // to it.
+            vine->props[TREE_POSITION_KEY].get_coord() = tree_anchor_pos(spot);
             --num_vines;
             if (you.can_see(*vine))
                 seen = true;
@@ -4312,7 +4414,7 @@ static void _corrupting_pulse(monster *mons)
     if (you.see_cell(mons->pos()))
     {
         targeter_radius hitfunc(mons, LOS_NO_TRANS);
-        flash_view_delay(UA_MONSTER, MAGENTA, 300, &hitfunc);
+        flash_view_delay(UA_MONSTER, MAGENTA, 300, 0, &hitfunc);
 
         if (could_harm_enemy(mons, &you, true)
             && cell_see_cell(you.pos(), mons->pos(), LOS_NO_TRANS))
@@ -5913,6 +6015,49 @@ static ai_action::goodness _spike_launcher_goodness(const monster& caster)
     return ai_action::bad();
 }
 
+static ai_action::goodness _stampede_goodness(const monster& caster)
+{
+    // Can only stampede if we're able to move and not already stampeding
+    if (caster.has_ench(ENCH_STAMPEDE) || caster.cannot_move() || caster.is_constricted() || caster.caught())
+        return ai_action::impossible();
+
+    // Can only stampede at visible foes.
+    const actor* foe = caster.get_foe();
+    if (!foe || !caster.can_see(*foe) || adjacent(caster.pos(), foe->pos()))
+        return ai_action::impossible();
+
+    // Can only stampede in a compass direction.
+    const coord_def delta = foe->pos() - caster.pos();
+    if (!(abs(delta.x) == abs(delta.y) || delta.x == 0 || delta.y == 0))
+        return ai_action::impossible();
+
+    // Now actually trace to see if it's possible to reach our foe from here.
+    const coord_def step = delta.sgn();
+    coord_def pos = caster.pos();
+    while (!adjacent(pos, foe->pos()))
+    {
+        pos += step;
+        if (actor_at(pos) || !monster_habitable_grid(&caster, pos))
+            return ai_action::impossible();
+    }
+
+    return ai_action::good();
+}
+
+static void _mons_start_stampede(monster& mon)
+{
+    const actor* foe = mon.get_foe();
+    const coord_def step = (foe->pos() - mon.pos()).sgn();
+
+    mon.add_ench(mon_enchant(ENCH_STAMPEDE, &mon, INFINITE_DURATION));
+    mon.props[STAMPEDE_DIRECTION_KEY].get_coord() = step;
+
+    if (you.can_see(mon))
+        mprf("%s starts stampeding towards %s.", mon.name(DESC_THE).c_str(), foe->name(DESC_THE).c_str());
+
+    mon_do_stampede(mon);
+}
+
 void setup_breath_timeout(monster* mons)
 {
     if (mons->has_ench(ENCH_BREATH_WEAPON))
@@ -6276,14 +6421,12 @@ static coord_def _mons_fragment_target(const monster &mon)
     int maxpower = 0;
     for (distance_iterator di(mons->pos(), true, true, range); di; ++di)
     {
-        bool temp;
-
         if (!cell_see_cell(mons->pos(), *di, LOS_NO_TRANS))
             continue;
 
         bolt beam;
         const char *what = nullptr;
-        if (!setup_fragmentation_beam(beam, pow, mons, *di, true, &what, temp))
+        if (!setup_fragmentation_beam(beam, pow, mons, *di, true, &what))
             continue;
 
         beam.range = range;
@@ -6417,8 +6560,8 @@ static branch_summon_pair _invitation_summons[] =
     }},
   { BRANCH_ELF,
     { // Elf enemies
-      {  1,   1,   50, FLAT, MONS_DEEP_ELF_AIR_MAGE },
-      {  1,   1,   50, FLAT, MONS_DEEP_ELF_FIRE_MAGE },
+      {  1,   1,   50, FLAT, MONS_DEEP_ELF_ZEPHYRMANCER },
+      {  1,   1,   50, FLAT, MONS_DEEP_ELF_PYROMANCER },
       {  1,   1,   40, FLAT, MONS_DEEP_ELF_KNIGHT },
     }},
   { BRANCH_VAULTS,
@@ -7729,7 +7872,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
             return;
         if (foe->is_player())
             mpr("The long-dead rise up around you.");
-        else if (you.can_see(*foe))
+        else if (you.see_cell(foe->pos()))
             mprf("The long-dead rise up around %s.", foe->name(DESC_THE).c_str());
         _cast_vanquished_vanguard(mons);
         return;
@@ -8016,16 +8159,26 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
 
            if (living)
            {
-#ifdef USE_TILE
                 if (spell == SPELL_LEHUDIBS_CRYSTAL_SPEAR)
+                {
                     living->props[MONSTER_TILE_KEY] = TILEP_MONS_LIVING_SPELL_CRYSTAL;
+                    living->colour = YELLOW;
+                }
                 else if (spell == SPELL_PETRIFY)
+                {
                     living->props[MONSTER_TILE_KEY] = TILEP_MONS_LIVING_SPELL_EARTH;
+                    living->colour = BROWN;
+                }
                 else if (spell == SPELL_SMITING)
+                {
                     living->props[MONSTER_TILE_KEY] = TILEP_MONS_LIVING_SPELL_HOLY;
+                    living->colour = LIGHTGREEN;
+                }
                 else if (spell == SPELL_ICEBLAST)
+                {
                     living->props[MONSTER_TILE_KEY] = TILEP_MONS_LIVING_SPELL_ICE;
-#endif
+                    living->colour = LIGHTBLUE;
+                }
            }
         }
         return;
@@ -8039,12 +8192,7 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
 
     case SPELL_BROTHERS_IN_ARMS:
     {
-        // Invocation; don't use spell_hd
-        int power = (mons->get_hit_dice() * 20)
-                          + random2(mons->get_hit_dice() * 5);
-        power -= random2(mons->get_hit_dice() * 5); // force a sequence point
         monster_type to_summon;
-
         if (mons->type == MONS_SPRIGGAN_BERSERKER)
         {
             monster_type berserkers[] = { MONS_POLAR_BEAR, MONS_ELEPHANT,
@@ -8054,12 +8202,12 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         else
         {
             monster_type berserkers[] = { MONS_BLACK_BEAR, MONS_OGRE, MONS_TROLL,
-                                           MONS_TWO_HEADED_OGRE, MONS_DEEP_TROLL };
+                                          MONS_TWO_HEADED_OGRE, MONS_DEEP_TROLL };
             to_summon = RANDOM_ELEMENT(berserkers);
         }
 
-        summon_berserker(power, mons, to_summon);
-        mons->props[BROTHERS_KEY].get_int()++;
+        if (summon_berserker(mons, to_summon))
+            mons->props[BROTHERS_KEY].get_int()++;
         return;
     }
 
@@ -8422,6 +8570,13 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
         return;
     }
 
+    case SPELL_MURKY_LEGION:
+    {
+        for (int i = 0; i < 2; ++i)
+            _summon(*mons, MONS_GLOWMURK_GHAST, summ_dur(1), slot);
+        return;
+    }
+
     case SPELL_SUMMON_SCORPIONS:
     {
         const int max_scorps = 1 + div_rand_round(splpow, 42);
@@ -8438,6 +8593,8 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
             _summon(*mons, MONS_EMPEROR_SCORPION, summ_dur(5), slot);
         return;
     }
+
+
 
     case SPELL_BATTLECRY:
         _battle_cry(*mons, SPELL_BATTLECRY);
@@ -8658,6 +8815,10 @@ void mons_cast(monster* mons, bolt pbolt, spell_type spell_cast,
 
     case SPELL_BESTOW_ARMS:
         _cast_bestow_arms(*mons);
+        return;
+
+    case SPELL_TOUCH_OF_PARADOX:
+        _cast_touch_of_paradox(mons);
         return;
 
     case SPELL_FULMINANT_PRISM:
@@ -8911,7 +9072,7 @@ static void _speech_fill_target(string& targ_prep, string& target,
     else if (mons->foe == MHITNOT && !mons_is_confused(*mons, true))
         target = "NONEXISTENT FOE";
     else if (!invalid_monster_index(mons->foe)
-             && env.mons[mons->foe].type == MONS_NO_MONSTER)
+             && invalid_monster(&env.mons[mons->foe]))
     {
         target = "DEAD FOE";
     }
@@ -9824,6 +9985,20 @@ ai_action::goodness monster_spell_goodness(monster* mon, spell_type spell)
     case SPELL_REGENERATE_OTHER:
     case SPELL_MASS_REGENERATION:
         return _ally_needs_regeneration(*mon);
+
+    case SPELL_TOUCH_OF_PARADOX:
+        if (!foe || !mon->can_see(*foe))
+            return ai_action::bad();
+
+        for (monster_near_iterator mi(mon, LOS_NO_TRANS); mi; ++mi)
+        {
+            if (*mi != mon && mons_aligned(mon, *mi)
+                && mons_has_attacks(**mi) && !mi->has_ench(ENCH_PARADOX_TOUCHED))
+            {
+                return ai_action::good();
+            }
+        }
+        return ai_action::bad();
 
     case SPELL_POISONOUS_CLOUD:
     case SPELL_MEPHITIC_CLOUD:

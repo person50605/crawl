@@ -148,7 +148,7 @@ It enhances your Air magic.
 %%%%
 archery (Archery) armour ego
 
-It has half the normal encumbrance for the purpose of ranged combat.
+It has one-third the normal encumbrance for the purpose of ranged combat.
 %%%%
 attunement (Attunement) armour ego
 
@@ -252,6 +252,8 @@ mesmerism (Mesmerism) armour ego
 When you are struck in melee, it briefly dazes all nearby enemies, then must
 recharge by standing still for a while. Its duration, radius, and recharge
 speed are improved by your Evocations skill.
+
+It goes briefly dormant whenever you enter a different floor.
 %%%%
 parrying (Parrying) armour ego
 

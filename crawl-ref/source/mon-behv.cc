@@ -744,7 +744,10 @@ void handle_behaviour(monster* mon)
             // Batty monsters don't automatically reseek so that
             // they'll flitter away, we'll reset them just before
             // they get movement in handle_monsters() instead. -- bwr
-            if ((proxFoe || mons_foe_is_marked(*mon)) && !mons_is_batty(*mon))
+            // The exception is friendly batty monsters targetting the player,
+            // who should seek the player.
+            if ((proxFoe || mons_foe_is_marked(*mon))
+                && (!mons_is_batty(*mon) || (isFriendly && mon->foe == MHITYOU)))
             {
                 new_beh = BEH_SEEK;
                 break;
@@ -914,6 +917,17 @@ void handle_behaviour(monster* mon)
             mon->foe_memory = 0;
 
         mon->foe = new_foe;
+
+        // Wandering lurkers can eventually go back to lurking (but not if you
+        // would just detect them again anyway).
+        if (mon->behaviour == BEH_WANDER
+            && mon->attitude == ATT_HOSTILE
+            && mons_class_flag(mon->type, M_LURKER)
+            && !have_passive(passive_t::see_unseen)
+            && !mon->has_ench(ENCH_PREPARING_TO_LURK))
+        {
+            mon->add_ench(ENCH_PREPARING_TO_LURK);
+        }
     }
 }
 
@@ -1118,8 +1132,12 @@ void behaviour_event(monster* mon, mon_event_type event, const actor *src,
 
             if (you.can_see(*mon))
             {
+                const actor* attacker = src;
+                if (attacker && attacker->mindex() == YOU_FAULTLESS)
+                    attacker = nullptr;
+
                 mprf("%s attack snaps %s out of %s fear.",
-                        src ? src->name(DESC_ITS).c_str() : "the",
+                        attacker ? attacker->name(DESC_ITS).c_str() : "the",
                         mon->name(DESC_THE).c_str(),
                         mon->pronoun(PRONOUN_POSSESSIVE).c_str());
             }
@@ -1140,15 +1158,13 @@ void behaviour_event(monster* mon, mon_event_type event, const actor *src,
             // Don't attempt to 'anger' monsters that are already hostile; this can
             // have weird and unexpected effects, such as prematurely ending hostile
             // effects.
-            else if (mon->temp_attitude()  != ATT_HOSTILE)
+            else if (mon->temp_attitude() != ATT_HOSTILE)
             {
                 // Pass aggro events along to the head, so that attitude changes
                 // can be propogated in a way that makes sense.
-                if (mon->is_child_monster())
-                {
-                    monster* head = &get_tentacle_head(get_tentacle_head(*mon));
+                monster* head = &get_tentacle_head(*mon);
+                if (head != mon)
                     behaviour_event(head, event, src, src_pos, allow_shout);
-                }
 
                 const bool was_friend = mons_att_wont_attack(mon->attitude);
                 mon->attitude = ATT_HOSTILE;

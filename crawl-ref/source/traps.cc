@@ -28,6 +28,7 @@
 #include "item-prop.h"
 #include "items.h"
 #include "libutil.h"
+#include "map-knowledge.h"
 #include "mapmark.h"
 #include "mon-cast.h" // recall for zot traps
 #include "mon-enum.h"
@@ -637,7 +638,6 @@ void trigger_trap(actor& triggerer)
         {
         // keep this for messaging purposes
         const bool triggerer_seen = you.can_see(triggerer);
-        const bool triggerer_was_invisible_monster = m && m->has_ench(ENCH_INVIS) && !m->friendly();
 
         // Fire away!
         triggerer.do_shaft();
@@ -649,15 +649,6 @@ void trigger_trap(actor& triggerer)
             mprf("%s shaft crumbles and collapses.",
                  triggerer_seen ? "The" : "A");
             destroy_trap(pos);
-
-            // If we shaft an invisible monster reactivate autopickup.
-            // We need to check for actual invisibility rather than
-            // whether we can see the monster. There are several edge
-            // cases where a monster is visible to the player but we
-            // still need to turn autopickup back on, such as
-            // TSO's halo or sticky flame.
-            if (triggerer_was_invisible_monster)
-                autotoggle_autopickup(false);
         }
         }
         break;
@@ -676,10 +667,11 @@ void destroy_trap(const coord_def& pos)
     if (!feat_is_trap(env.grid(pos)))
         return;
 
-    dungeon_terrain_changed(pos, DNGN_FLOOR);
+    if (!revert_terrain_change(pos, TERRAIN_CHANGE_GOLUBRIA, false))
+        dungeon_terrain_changed(pos, DNGN_FLOOR);
     if (you.see_cell(pos))
     {
-        env.map_knowledge(pos).set_feature(DNGN_FLOOR);
+        update_terrain_knowledge(pos);
         StashTrack.update_stash(pos);
     }
 }

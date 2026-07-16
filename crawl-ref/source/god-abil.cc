@@ -54,6 +54,7 @@
 #include "libutil.h"
 #include "losglobal.h"
 #include "macro.h"
+#include "map-knowledge.h"
 #include "mapmark.h"
 #include "maps.h"
 #include "message.h"
@@ -89,6 +90,7 @@
 #include "spl-book.h"
 #include "spl-goditem.h"
 #include "spl-monench.h"
+#include "spl-summoning.h"
 #include "spl-transloc.h"
 #include "spl-util.h"
 #include "sprint.h"
@@ -165,8 +167,7 @@ bool bless_weapon(god_type god, brand_type brand, colour_t colour)
 
     int item_slot = prompt_invent_item("Brand which weapon?",
                                        menu_type::invlist,
-                                       OSEL_BLESSABLE_WEAPON, OPER_ANY,
-                                       invprompt_flag::escape_only);
+                                       OSEL_BLESSABLE_WEAPON, OPER_ANY);
 
     if (item_slot == PROMPT_NOTHING || item_slot == PROMPT_ABORT)
     {
@@ -1416,6 +1417,55 @@ void trog_remove_trogs_hand()
     you.duration[DUR_TROGS_HAND] = 0;
 }
 
+static const vector<random_pick_entry<monster_type>> _trog_brothers =
+{
+  { -3,  10,  150, PEAK, MONS_BLACK_BEAR },
+  { -1,  13,  150, PEAK, MONS_POLAR_BEAR },
+  {  3,  19,  250, PEAK, MONS_OGRE },
+  {  6,  19,  200, PEAK, MONS_TROLL },
+  {  8,  19,  150, PEAK, MONS_ELEPHANT },
+  {  10, 20,  100, PEAK, MONS_SKYSHARK },
+  {  12, 23,  200, PEAK, MONS_CYCLOPS },
+  {  13, 24,  125, PEAK, MONS_DEATH_YAK },
+  {  13, 27,  200, PEAK, MONS_TWO_HEADED_OGRE },
+  {  13, 27,  100, RISE, MONS_TWO_HEADED_OGRE },
+  {  15, 30,  200, PEAK, MONS_DEEP_TROLL },
+  {  18, 31,  150, PEAK, MONS_IRON_TROLL },
+  {  19, 35,  150, PEAK, MONS_STONE_GIANT },
+  {  20, 37,   90, PEAK, MONS_DIRE_ELEPHANT },
+  {  22, 38,   90, PEAK, MONS_ETTIN },
+};
+
+monster_type trog_get_brother_type(int power)
+{
+    monster_picker picker;
+    return picker.pick(_trog_brothers, power, MONS_OGRE);
+}
+
+spret trog_brothers_in_arms(bool fail)
+{
+    static const vector<monster_type> types = { MONS_BLACK_BEAR,
+                                                MONS_POLAR_BEAR,
+                                                MONS_OGRE,
+                                                MONS_TROLL,
+                                                MONS_ELEPHANT,
+                                                MONS_SKYSHARK,
+                                                MONS_CYCLOPS,
+                                                MONS_DEATH_YAK,
+                                                MONS_TWO_HEADED_OGRE,
+                                                MONS_DEEP_TROLL,
+                                                MONS_IRON_TROLL,
+                                                MONS_STONE_GIANT,
+                                                MONS_ETTIN };
+    if (!player_summon_check(types))
+        return spret::abort;
+
+    fail_check();
+
+    summon_berserker(&you, trog_get_brother_type(you.experience_level));
+    return spret::success;
+}
+
 // Return whether the player can light the torch on their current floor
 // (ie: it is a valid place to do so and it has never been lit here before)
 string yred_cannot_light_torch_reason()
@@ -1895,7 +1945,7 @@ int slouch_damage_for_speed(int mon_speed, int mon_action_energy, int jerk_num,
     const int player_number = BASELINE_DELAY * BASELINE_DELAY * BASELINE_DELAY;
     return 4 * (mon_speed * BASELINE_DELAY * jerk_num
                            / mon_action_energy / jerk_denom
-                - player_number / player_movement_speed() / player_speed());
+                - player_number / player_overall_move_delay(BASELINE_DELAY));
 }
 
 int slouch_damage(monster *victim)
@@ -2188,7 +2238,7 @@ static map<curse_type, curse_data> _ashenzari_curses =
 static bool _can_use_curse(const curse_data& c)
 {
     for (skill_type sk : c.boosted)
-        if (you.can_currently_train[sk])
+        if (!is_useless_skill(sk))
             return true;
 
     return false;
@@ -2234,7 +2284,7 @@ string desc_curse_skills(const CrawlStoreValue& curse)
     vector<skill_type> trainable;
 
     for (skill_type sk : c.boosted)
-        if (you.can_currently_train[sk])
+        if (!is_useless_skill(sk))
             trainable.push_back(sk);
 
     return c.name + ": "
@@ -2343,8 +2393,7 @@ bool ashenzari_curse_item()
     const string prompt_msg = make_stringf("Curse which item? (Esc to abort)");
     const int item_slot = prompt_invent_item(prompt_msg.c_str(),
                                              menu_type::invlist,
-                                             OSEL_CURSABLE, OPER_ANY,
-                                             invprompt_flag::escape_only);
+                                             OSEL_CURSABLE, OPER_ANY);
     if (prompt_failed(item_slot))
         return false;
 
@@ -2377,8 +2426,7 @@ bool ashenzari_uncurse_item()
 {
     int item_slot = prompt_invent_item("Uncurse and destroy which item?",
                                        menu_type::invlist,
-                                       OSEL_CURSED_WORN, OPER_ANY,
-                                       invprompt_flag::escape_only);
+                                       OSEL_CURSED_WORN, OPER_ANY);
     if (prompt_failed(item_slot))
         return false;
 
@@ -2415,7 +2463,6 @@ bool ashenzari_uncurse_item()
         return false;
 
     mprf("You shatter the curse binding %s!", item.name(DESC_THE).c_str());
-    item_skills(item, you.skills_to_hide);
 
     for (item_def* _item : to_remove)
     {
@@ -2992,13 +3039,22 @@ static bool _marionette_spell_attempt(monster& caster, spell_type spell,
                                       vector<monster*>& targs,
                                       bool check_only = false)
 {
-    shuffle_array(targs);
+    const spell_flags flags = get_spell_flags(spell);
+    const bool aggressive = (flags & (spflag::targeting_mask))
+                            && !(flags & ((spflag::helpful | spflag::escape)));
 
+    shuffle_array(targs);
     for (monster* targ : targs)
     {
+        // Don't cast attack spells directly on ourselves.
+        // (This is a very crude approximation, but in general we assume
+        // untargeted AoE already won't hurt its own caster.)
+        if (targ == &caster && aggressive)
+            continue;
+
         // We verify alignment again at this point, just in case it's changed
         // in the middle of Marionette (eg: by the monster charming something).
-        if (!targ->alive() || targ->wont_attack())
+        if (!targ->alive() || (targ->wont_attack() && targ != &caster))
             continue;
 
         caster.foe = targ->mindex();
@@ -3133,7 +3189,6 @@ spret dithmenos_marionette(monster& target, bool fail)
     const coord_def old_target = target.target;
     const int old_energy = target.speed_increment;
     target.attitude = ATT_MARIONETTE;
-    env.final_effect_monster_cache.push_back(target);
 
     // Attempt to cast all valid spells the monster has, in randomized order,
     // (but using all spells at least once before repeating). End early if the
@@ -3523,8 +3578,8 @@ static string _describe_gozag_shop(int index)
 /**
  * Let the player choose from the currently available merchants to call.
  *
- * @param   The index of the chosen shop; -1 if none was chosen (due to e.g.
- *          a seen_hup).
+ * @param   The index of the chosen shop; -1 if we had to return early
+ *          due to seen_hup being set.
  */
 static int _gozag_choose_shop()
 {
@@ -4075,6 +4130,7 @@ spret qazlal_upheaval(coord_def target, bool quiet, bool fail, dist *player_targ
 static const map<cloud_type, monster_type> elemental_clouds = {
     { CLOUD_FIRE,           MONS_FIRE_ELEMENTAL },
     { CLOUD_FOREST_FIRE,    MONS_FIRE_ELEMENTAL },
+    { CLOUD_BLASTMOTES,     MONS_FIRE_ELEMENTAL },
     { CLOUD_COLD,           MONS_WATER_ELEMENTAL },
     { CLOUD_RAIN,           MONS_WATER_ELEMENTAL },
     { CLOUD_DUST,           MONS_EARTH_ELEMENTAL },
@@ -4083,6 +4139,7 @@ static const map<cloud_type, monster_type> elemental_clouds = {
     { CLOUD_GREY_SMOKE,     MONS_AIR_ELEMENTAL },
     { CLOUD_BLUE_SMOKE,     MONS_AIR_ELEMENTAL },
     { CLOUD_PURPLE_SMOKE,   MONS_AIR_ELEMENTAL },
+    { CLOUD_FLUFFY,         MONS_AIR_ELEMENTAL },
     { CLOUD_STORM,          MONS_AIR_ELEMENTAL },
 };
 
@@ -4968,7 +5025,6 @@ static bool _execute_sacrifice(ability_type sac, const char* message)
 static void _ru_kill_skill(skill_type skill)
 {
     change_skill_points(skill, -you.skill_points[skill], true);
-    you.can_currently_train.set(skill, false);
     reset_training();
     check_selected_skills();
     update_four_winds(true);
@@ -5124,7 +5180,7 @@ bool ru_do_sacrifice(ability_type sac)
                 }
             }
             else
-                sac_text = mut_upgrade_summary(mut);
+                sac_text = innate_mut_upgrade_summary(mut);
         }
         offer_text = make_stringf("%s: %s", sac_def.sacrifice_text,
             sac_text.c_str());
@@ -5456,7 +5512,7 @@ bool ru_power_leap()
         }
 
         monster* mons = monster_at(beam.target);
-        if (mons && you.can_see(*mons))
+        if (mons && you.aware_of(*mons))
         {
             clear_messages();
             mpr("You can't leap on top of the monster!");
@@ -5526,6 +5582,8 @@ bool ru_power_leap()
     wave.hit = AUTOMATIC_HIT;
     wave.loudness = 2;
     wave.explode();
+
+    mpr("You perform a powerful leap!");
 
     // we need to exempt the player from damage.
     for (adjacent_iterator ai(you.pos(), false); ai; ++ai)
@@ -5869,11 +5927,11 @@ spret uskayaw_grand_finale(bool fail)
         if (!mons || !you.can_see(*mons))
         {
             clear_messages();
-            mpr("You can't perceive a target there!");
+            mpr("You can't see a target there!");
             continue;
         }
 
-        if (!check_moveto(beam.target, "move", false))
+        if (!check_moveto(beam.target, "move", false, false))
         {
             // try again (messages handled by check_moveto)
         }
@@ -5952,7 +6010,7 @@ bool hepliaklqana_choose_ancestor_type(int ancestor_choice)
 
     static const map<int, monster_type> ancestor_types = {
         { ABIL_HEPLIAKLQANA_TYPE_KNIGHT, MONS_ANCESTOR_KNIGHT },
-        { ABIL_HEPLIAKLQANA_TYPE_BATTLEMAGE, MONS_ANCESTOR_BATTLEMAGE },
+        { ABIL_HEPLIAKLQANA_TYPE_ELEMENTALIST, MONS_ANCESTOR_ELEMENTALIST },
         { ABIL_HEPLIAKLQANA_TYPE_HEXER, MONS_ANCESTOR_HEXER },
     };
 
@@ -6000,21 +6058,10 @@ bool hepliaklqana_choose_ancestor_type(int ancestor_choice)
  */
 spret hepliaklqana_idealise(bool fail)
 {
-    const mid_t ancestor_mid = hepliaklqana_ancestor();
-    if (ancestor_mid == MID_NOBODY)
-    {
-        mpr("You have no ancestor to preserve!");
-        return spret::abort;
-    }
-
-    monster *ancestor = monster_by_mid(ancestor_mid);
-    if (!ancestor || !you.can_see(*ancestor))
-    {
-        mprf("%s is not nearby!", hepliaklqana_ally_name().c_str());
-        return spret::abort;
-    }
-
     fail_check();
+
+    monster *ancestor = hepliaklqana_ancestor_mon();
+    ASSERT(ancestor);
 
     simple_god_message(make_stringf(" grants %s healing and protection!",
                                     ancestor->name(DESC_YOUR).c_str()).c_str());
@@ -6035,34 +6082,6 @@ spret hepliaklqana_idealise(bool fail)
                     + random2avg(you.skill(SK_INVOCATIONS, 20), 2);
     ancestor->add_ench({ ENCH_IDEALISED, &you, dur});
     return spret::success;
-}
-
-/**
- * Prompt to allow the player to choose a target for the Transference ability.
- *
- * @return  The chosen target, or the origin if none was chosen.
- */
-static coord_def _get_transference_target()
-{
-    dist spd;
-
-    const int aoe_radius = have_passive(passive_t::transfer_drain) ? 1 : 0;
-    targeter_transference tgt(&you, aoe_radius);
-    direction_chooser_args args;
-    args.hitfunc = &tgt;
-    args.restricts = DIR_TARGET;
-    args.mode = TARG_MOBILE_MONSTER;
-    args.range = LOS_RADIUS;
-    args.needs_path = false;
-    args.self = confirm_prompt_type::none;
-    args.show_floor_desc = true;
-    args.top_prompt = "Select a target.";
-
-    direction(spd, args);
-
-    if (!spd.isValid)
-        return coord_def();
-    return spd.target;
 }
 
 /// Drain any monsters near the destination of Tranference.
@@ -6089,77 +6108,24 @@ static void _transfer_drain_nearby(coord_def destination)
  * ancestor with a targeted creature & potentially slowing monsters adjacent
  * to the target.
  *
+ * @param target    The location being targeted.
  * @param fail      Whether the effect should fail after checking validity.
  * @return          Whether the ability succeeded, failed, or was aborted.
  */
-spret hepliaklqana_transference(bool fail)
+spret hepliaklqana_transference(const coord_def& target, bool fail)
 {
     monster *ancestor = hepliaklqana_ancestor_mon();
-    if (!ancestor || !you.can_see(*ancestor))
-    {
-        mprf("%s is not nearby!", hepliaklqana_ally_name().c_str());
-        return spret::abort;
-    }
-
-    coord_def target = _get_transference_target();
-    if (target.origin())
-    {
-        canned_msg(MSG_OK);
-        return spret::abort;
-    }
-
     actor* victim = actor_at(target);
-    const bool victim_visible = victim && you.can_see(*victim);
-    if ((!victim || !victim_visible)
-        && !yesno("You can't see anything there. Try transferring anyway?",
-                  true, 'n'))
-    {
-        canned_msg(MSG_OK);
-        return spret::abort;
-    }
-
-    if (victim == ancestor)
-    {
-        mprf("You can't transfer your ancestor with %s.",
-             ancestor->pronoun(PRONOUN_REFLEXIVE).c_str());
-        return spret::abort;
-    }
-
-    const bool victim_immovable
-        = victim && (mons_is_tentacle_or_tentacle_segment(victim->type)
-                     || victim->is_stationary()
-                     || mons_is_projectile(victim->type));
-    if (victim_visible && victim_immovable)
-    {
-        mpr("You can't transfer that.");
-        return spret::abort;
-    }
+    ASSERT(victim);
 
     const coord_def destination = ancestor->pos();
-    if (victim == &you && !check_moveto(destination, "transfer", false))
+    if (victim == &you && !check_moveto(destination, "transfer", false, false))
         return spret::abort;
-
-    const bool uninhabitable = victim && !victim->is_habitable(destination);
-    if (uninhabitable && victim_visible)
-    {
-        mprf("%s can't be transferred there.", victim->name(DESC_THE).c_str());
-        return spret::abort;
-    }
-
-    // we assume the ancestor flies & so can survive anywhere anything can.
 
     fail_check();
 
-    if (!victim || uninhabitable || victim_immovable)
-    {
-        canned_msg(MSG_NOTHING_HAPPENS);
-        return spret::success;
-    }
-
     if (victim->is_player())
     {
-        if (cancel_harmful_move(false))
-            return spret::abort;
         ancestor->move_to(target, MV_ALLOW_OVERLAP | MV_TRANSLOCATION, true);
         victim->move_to(destination, MV_ALLOW_OVERLAP | MV_TRANSLOCATION, true);
     }
@@ -6378,9 +6344,7 @@ bool wu_jian_do_wall_jump(coord_def targ)
     int wall_jump_modifier = (you.attribute[ATTR_SERPENTS_LASH] != 1) ? 2
                                                                       : 1;
 
-    you.time_taken = player_speed() * wall_jump_modifier
-                     * player_movement_speed();
-    you.time_taken = div_rand_round(you.time_taken, 10);
+    you.time_taken = player_overall_move_delay(wall_jump_modifier);
 
     // need to set this here in case serpent's lash isn't active
     you.turn_is_over = true;
@@ -6754,6 +6718,7 @@ void makhleb_setup_destruction_beam(bolt& beam, int power, bool signature_only)
         case BEAM_ELECTRICITY:
             beam.name = "torrent of electricity";
             beam.colour = LIGHTCYAN;
+            beam.tile_beam = TILE_BOLT_STRONG_ELEC;
             break;
 
         case BEAM_NEG:
@@ -6766,11 +6731,13 @@ void makhleb_setup_destruction_beam(bolt& beam, int power, bool signature_only)
         case BEAM_LAVA:
             beam.name = "gout of magma";
             beam.colour = RED;
+            beam.tile_beam = TILE_BOLT_MAGMA;
             break;
 
         case BEAM_ICE:
             beam.name = "flurry of ice";
             beam.colour = ETC_ICE;
+            beam.tile_beam = TILE_BOLT_ICEBLAST;
             break;
 
         case BEAM_DEVASTATION:
@@ -6908,10 +6875,10 @@ static const vector<random_pick_entry<monster_type>> _makhleb_servants =
   { 17,  27,  220, SEMI, MONS_EXECUTIONER },
 
   // Accessible only through the Mark of the Tyrant
-  { 19,  27,  260, SEMI, MONS_TZITZIMITL },
-  { 21,  27,  280, SEMI, MONS_ICE_FIEND },
-  { 22,  27,  300, SEMI, MONS_BRIMSTONE_FIEND },
-  { 26,  27,  150, SEMI, MONS_HELL_SENTINEL },
+  { 19,  30,  260, SEMI, MONS_TZITZIMITL },
+  { 21,  30,  280, SEMI, MONS_ICE_FIEND },
+  { 22,  30,  300, SEMI, MONS_BRIMSTONE_FIEND },
+  { 26,  27,  180, SEMI, MONS_HELL_SENTINEL },
 };
 
 static monster* _find_carnage_target(monster_type demon_type, coord_def& demon_spot)
@@ -7357,7 +7324,7 @@ void makhleb_crucible_kill(monster& victim)
         simple_god_message(" acknowledges your contrition and permits you to"
                            " depart the Crucible.", false, GOD_MAKHLEB);
 
-        env.map_knowledge(pos).set_feature(DNGN_EXIT_CRUCIBLE);
+        update_terrain_knowledge(pos);
 #ifdef USE_TILE
         tile_env.bk_bg(pos) = TILE_DNGN_PORTAL;
         tiles.update_minimap(pos);

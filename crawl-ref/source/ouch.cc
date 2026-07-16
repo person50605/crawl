@@ -706,10 +706,10 @@ static void _maybe_summon_demonic_guardian(int dam, kill_method_type death_type)
 }
 
 // The time-warped blood mutation grants haste to
-// your allies when you're brought below half health.
+// your allies when you're brought below 66% health.
 void _maybe_blood_hastes_allies()
 {
-    if (you.hp * 2 > you.hp_max
+    if (you.hp > you.hp_max * 2 / 3
         || !you.has_mutation(MUT_TIME_WARPED_BLOOD)
         || you.duration[DUR_TIME_WARPED_BLOOD_COOLDOWN])
     {
@@ -1095,7 +1095,7 @@ static void _maybe_scream(mid_t source)
 
     if (x_chance_in_y(you.get_mutation_level(MUT_SCREAM), 20))
     {
-        yell(actor_by_mid(source));
+        yell(actor_by_mid(source, true));
         you.shouted_pos = you.pos();
     }
 }
@@ -1126,7 +1126,7 @@ static void _place_player_corpse(bool explode)
     if (you.form != transformation::none)
         mpr("Your shape twists and changes as you die.");
 
-    place_monster_corpse(dummy, false);
+    place_corpse_or_gold(dummy, false);
 }
 
 #if defined(WIZARD) || defined(DEBUG)
@@ -1327,7 +1327,7 @@ void ouch(int dam, kill_method_type death_type, mid_t source, const char *aux,
 
     // Marionettes will never hurt the player with their spells (even if they
     // have somehow killed themselves in the process)
-    if (monster* mon_source = cached_monster_copy_by_mid(source))
+    if (monster* mon_source = monster_by_mid(source, false, /*allow_dead=*/true))
     {
         if (mon_source->attitude == ATT_MARIONETTE)
             dam = 0;

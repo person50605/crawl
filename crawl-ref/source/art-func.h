@@ -33,7 +33,6 @@
 #include "exercise.h"      // For practise_evoking
 #include "fight.h"
 #include "fineff.h"        // For the Storm Queen's Shield
-#include "god-conduct.h"   // did_god_conduct
 #include "mgen-data.h"     // For Sceptre of Asmodeus
 #include "melee-attack.h"  // For Fungal Fisticloak
 #include "message.h"
@@ -158,8 +157,6 @@ static void _CURSES_equip(item_def */*item*/, bool *show_msgs, bool unmeld)
 static void _CURSES_melee_effects(item_def* /*weapon*/, actor* attacker,
                                   actor* defender, int dam, melee_attack*)
 {
-    if (attacker->is_player())
-        did_god_conduct(DID_EVIL, 3);
     if (defender->alive() && defender->holiness() & (MH_NATURAL | MH_PLANT))
         death_curse(*defender, attacker, "the scythe of Curses", min(dam, 27));
 }
@@ -459,14 +456,6 @@ static void _ZONGULDROK_equip(item_def */*item*/, bool *show_msgs,
     _equip_mpr(show_msgs, "You sense an extremely unholy aura.");
 }
 
-static void _ZONGULDROK_melee_effects(item_def* /*weapon*/, actor* attacker,
-                                      actor* /*defender*/, int /*dam*/,
-                                      melee_attack*)
-{
-    if (attacker->is_player())
-        did_god_conduct(DID_EVIL, 3);
-}
-
 ///////////////////////////////////////////////////
 
 static void _GONG_melee_effects(item_def* /*item*/, actor* wearer,
@@ -609,11 +598,6 @@ static void _WYRMBANE_melee_effects(item_def* weapon, actor* /*attacker*/,
     if (!defender || !defender->is_dragonkind())
         return;
 
-    // Since the target will become a DEAD MONSTER if it dies due to the extra
-    // damage to dragons, we need to grab this information now.
-    const int hd = defender->dragon_level();
-    string name = defender->name(DESC_THE);
-
     if (defender->alive())
     {
         int bonus_dam = 1 + random2(3 * dam / 2);
@@ -623,9 +607,15 @@ static void _WYRMBANE_melee_effects(item_def* weapon, actor* /*attacker*/,
             attack_strength_punctuation(bonus_dam).c_str());
 
         atk->inflict_damage(bonus_dam);
+        // The defender may be dead, but even if so we dont want to power up
+        // the lance, as this will happen on another call in the kill phase.
+        return;
     }
 
-    if (defender->alive() || !hd)
+    // XXX: This is only reached if the defender was already dead at the time this
+    // function was called (which should only be from melee_attack::handle_phase_killed())
+    const int hd = defender->dragon_level();
+    if (!hd)
         return;
 
     // The cap can be reached by:
@@ -645,12 +635,12 @@ static void _WYRMBANE_melee_effects(item_def* weapon, actor* /*attacker*/,
         {
             mprf("<white>The lance glows brightly as it skewers %s. You feel "
                  "that it has reached its full power.</white>",
-                 name.c_str());
+                 defender->name(DESC_THE).c_str());
         }
         else
         {
             mprf("<green>The lance glows as it skewers %s.</green>",
-                 name.c_str());
+                 defender->name(DESC_THE).c_str());
         }
 
         you.wield_change = true;
@@ -733,13 +723,6 @@ static void _DRAGONSKIN_unequip(item_def */*item*/, bool *show_msgs)
 }
 
 ///////////////////////////////////////////////////
-static void _BLACK_KNIGHT_HORSE_world_reacts(item_def */*item*/)
-{
-    if (x_chance_in_y(you.time_taken, 10 * BASELINE_DELAY))
-        did_god_conduct(DID_EVIL, 1);
-}
-
-///////////////////////////////////////////////////
 static void _NIGHT_equip(item_def */*item*/, bool *show_msgs, bool /*unmeld*/)
 {
     update_vision_range();
@@ -768,9 +751,6 @@ static void _PLUTONIUM_SWORD_melee_effects(item_def* weapon,
             mprf("Mutagenic energy flows through %s!",
                  weapon->name(DESC_THE, false, false, false).c_str());
         }
-
-        if (attacker->is_player())
-            did_god_conduct(DID_CHAOS, 3);
 
         if (one_chance_in(10))
         {
@@ -1246,13 +1226,6 @@ static void _ETERNAL_TORMENT_equip(item_def */*item*/, bool */*show_msgs*/,
     calc_hp();
 }
 
-static void _ETERNAL_TORMENT_world_reacts(item_def */*item*/)
-{
-    if (one_chance_in(10))
-        did_god_conduct(DID_EVIL, 1);
-}
-
-
 static void _ETERNAL_TORMENT_unequip(item_def */*item*/, bool */*show_msgs*/)
 {
     calc_hp();
@@ -1400,7 +1373,6 @@ static void _BATTLE_world_reacts(item_def */*item*/)
     {
         const int pow = div_rand_round(15 + you.skill(SK_CONJURATIONS, 15), 3);
         cast_battlesphere(&you, pow, false);
-        did_god_conduct(DID_WIZARDLY_ITEM, 10);
     }
 }
 
@@ -1440,8 +1412,6 @@ static int _harvest_corpses()
                 = static_cast<monster_type>(item.orig_monnum);
             if (you.religion == GOD_BEOGH && mons_genus(monnum) == MONS_ORC)
                 continue;
-
-            did_god_conduct(DID_EVIL, 1);
 
             ++harvested;
 
@@ -1647,13 +1617,6 @@ static void _AUTUMN_KATANA_melee_effects(item_def* /*weapon*/, actor* attacker,
 
 ///////////////////////////////////////////////////
 
-static void _FINGER_AMULET_world_reacts(item_def */*item*/)
-{
-    did_god_conduct(DID_EVIL, 1);
-}
-
-///////////////////////////////////////////////////
-
 static void _reset_victory_stats(item_def *item)
 {
     int &bonus_stats = item->props[VICTORY_STAT_KEY].get_int();
@@ -1750,10 +1713,7 @@ static void _ASMODEUS_melee_effects(item_def* /*weapon*/, actor* attacker,
         mg.set_summoned(&you, SPELL_HELLFIRE_COURT, summ_dur(4));
 
         if (create_monster(mg))
-        {
             mpr("The sceptre summons one of its terrible servants.");
-            did_god_conduct(DID_EVIL, 3);
-        }
     }
 }
 
@@ -1878,4 +1838,29 @@ static void _SWAMP_WITCH_SCALES_equip(item_def */*item*/, bool *show_msgs, bool 
 {
     if (!unmeld)
         _equip_mpr(show_msgs, "The air around you shimmers with cruel toxic glee.");
+}
+
+/////////////////////////////////////////////////////
+static void _FIRE_DRAGON_OCCULTIST_SCALES_equip(item_def */*item*/, bool *show_msgs, bool /*unmeld*/)
+{
+    if (!show_msgs || *show_msgs)
+        mprf(MSGCH_TALK, "%s", getSpeakString("fire dragon occultist scales greeting").c_str());
+}
+
+static void _FIRE_DRAGON_OCCULTIST_SCALES_unequip(item_def */*item*/, bool *show_msgs)
+{
+    if (!show_msgs || *show_msgs)
+        mprf(MSGCH_TALK, "%s", getSpeakString("fire dragon occultist scales farewell").c_str());
+}
+
+static void _ICE_DRAGON_ARCANIST_SCALES_equip(item_def */*item*/, bool *show_msgs, bool /*unmeld*/)
+{
+    if (!show_msgs || *show_msgs)
+        mprf(MSGCH_TALK, "%s", getSpeakString("ice dragon arcanist scales greeting").c_str());
+}
+
+static void _ICE_DRAGON_ARCANIST_SCALES_unequip(item_def */*item*/, bool *show_msgs)
+{
+    if (!show_msgs || *show_msgs)
+        mprf(MSGCH_TALK, "%s", getSpeakString("ice dragon arcanist scales farewell").c_str());
 }

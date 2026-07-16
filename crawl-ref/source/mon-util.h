@@ -123,7 +123,7 @@ struct monsterentry
 {
     short mc;            // monster number
 
-    char basechar;
+    char32_t basechar;
     colour_t colour;
     const char *name;
 
@@ -340,7 +340,7 @@ void name_zombie_from_mon(monster& mon, const monster& orig);
 int mons_power(monster_type mc);
 
 char32_t mons_char(monster_type mc);
-char mons_base_char(monster_type mc);
+char32_t mons_base_char(monster_type mc);
 
 int mons_class_colour(monster_type mc);
 
@@ -420,7 +420,6 @@ bool mons_is_unbreathing(monster_type mc);
 
 bool herd_monster(const monster& mon);
 
-int cheibriados_monster_player_speed_delta(const monster& mon);
 bool cheibriados_thinks_mons_is_fast(const monster& mon);
 bool mons_is_projectile(monster_type mc);
 bool mons_is_projectile(const monster& mon);
@@ -431,6 +430,10 @@ bool mons_has_blood(monster_type mc);
 bool mons_is_sensed(monster_type mc);
 bool mons_offers_beogh_conversion(const monster& mon);
 bool mons_offers_beogh_conversion_now(const monster& mon);
+
+bool mons_is_rider(monster_type mc);
+monster_type mons_mount_type(monster_type mc);
+monster_type mons_rider_type(monster_type mc);
 
 bool invalid_monster(const monster* mon);
 bool invalid_monster_type(monster_type mt);
@@ -503,9 +506,8 @@ bool mons_is_immotile(const monster& mons);
 
 int get_dist_to_nearest_monster();
 bool monster_nearby();
-actor *actor_by_mid(mid_t m, bool require_valid = false);
-monster *monster_by_mid(mid_t m, bool require_valid = false);
-monster *cached_monster_copy_by_mid(mid_t m);
+actor *actor_by_mid(mid_t m, bool require_valid = false, bool allow_dead = false);
+monster *monster_by_mid(mid_t m, bool require_valid = false, bool allow_dead = false);
 bool mons_is_recallable(const actor* caller, const monster& targ);
 void init_anon();
 actor *find_agent(mid_t m, kill_category kc);

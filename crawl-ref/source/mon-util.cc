@@ -156,6 +156,7 @@ void init_mon_name_cache()
         // insert, depending on which should take precedence. Some
         // uniques of multiple forms can get away with this, though.
         if (mon == MONS_BAI_SUZHEN_DRAGON
+            || mon == MONS_GOJI_UNMOUNTED
             || mon != MONS_SERPENT_OF_HELL
                && mons_species(mon) == MONS_SERPENT_OF_HELL)
         {
@@ -214,6 +215,40 @@ void init_monsters()
     init_monster_symbols();
 }
 
+// XXX: This is a very imperfect fallback, since it will result in color overlaps
+//      and in a few cases result in incorrectly-themed groupings. For instance,
+//      only *almost* all ◊ used to be P, but a few were I (and are not plants).
+//      However, it does strictly replace unicode characters with a 'best guess'
+//      and anything else can be edited by the player.
+static const map<char32_t, char32_t> mons_ascii_remap =
+{
+    {U'\xc5',   'A'}, // Å
+    {U'\xc6',   'R'}, // Æ
+    {U'\x10c',  'C'}, // Č
+    {U'\x10e',  'D'}, // Ď
+    {U'\x11f',  'g'}, // ğ
+    {U'\xf6',   'o'}, // ö
+    {U'\x175',  'W'}, // ŵ
+    {U'\x174',  'W'}, // Ŵ
+    {U'\x17e',  'z'}, // ž
+
+    {U'\x14b',  '9'}, // ŋ
+    {U'\xde',   'H'}, // Þ
+    {U'\x2021', 'I'}, // ‡
+
+    {U'\x394',  'I'}, // Δ
+    {U'\x398',  '*'}, // Θ
+    {U'\x3bb',  'y'}, // λ
+    {U'\x3a3',  'E'}, // Σ
+    {U'\x3c8',  'p'}, // ψ
+    {U'\x3c9',  'w'}, // ω
+
+    {U'\x25ca', 'P'}, // ◊
+    {U'\xa4',   '*'}, // ¤
+    {U'\x25cf', '*'}, // ●
+    {U'\x256c', 'I'}, // ╬
+};
+
 void init_monster_symbols()
 {
     map<unsigned, monster_type> base_mons;
@@ -237,6 +272,15 @@ void init_monster_symbols()
     for (monster_type i = MONS_PROGRAM_BUG; i < NUM_MONSTERS; ++i)
         if (wcwidth(monster_symbols[i].glyph) != 1)
             monster_symbols[i].glyph = mons_base_char(i);
+
+    if (Options.char_set == CSET_ASCII)
+    {
+        for (monster_type i = MONS_PROGRAM_BUG; i < NUM_MONSTERS; ++i)
+        {
+            if (const char32_t* ascii_char = map_find(mons_ascii_remap, monster_symbols[i].glyph))
+                monster_symbols[i].glyph = *ascii_char;
+        }
+    }
 }
 
 void set_resist(resists_t &all, mon_resist_flags res, int lev)
@@ -636,6 +680,7 @@ bool mons_class_is_draconic(monster_type mc)
         case MONS_DRAKE:
         case MONS_DRACONIAN:
         case MONS_WYRMHOLE:
+        case MONS_MONGREL_WURM:
             return true;
         default:
             return false;
@@ -780,19 +825,6 @@ bool mons_has_body(const monster& mon)
     return true;
 }
 
-// Difference in speed between monster and the player for Cheibriados'
-// purposes. This is the speed difference disregarding the player's
-// slow status.
-int cheibriados_monster_player_speed_delta(const monster& mon)
-{
-    // Ignore the Slow effect.
-    unwind_var<int> ignore_slow(you.duration[DUR_SLOW], 0);
-    const int pspeed = 1000 / (player_movement_speed() * player_speed());
-    dprf("Your delay: %d, your speed: %d, mon speed: %d",
-        player_movement_speed(), pspeed, mon.speed);
-    return mon.speed - pspeed;
-}
-
 bool cheibriados_thinks_mons_is_fast(const monster& mon)
 {
     return mons_base_speed(mon) >= 10;
@@ -931,7 +963,8 @@ bool actor_is_susceptible_to_vampirism(const actor& act, bool only_known)
 
 bool invalid_monster(const monster* mon)
 {
-    return !mon || invalid_monster_type(mon->type);
+    return !mon || invalid_monster_type(mon->type)
+        || testbits(mon->flags, MF_PENDING_RESET);
 }
 
 bool invalid_monster_type(monster_type mt)
@@ -1054,7 +1087,7 @@ int mons_demon_tier(monster_type mc)
 {
     switch (mons_base_char(mc))
     {
-    case 'C':
+    case U'\x010C': // 'Č':
         if (mc != MONS_ANTAEUS)
             return 0;
         // intentional fall-through for Antaeus
@@ -1414,7 +1447,7 @@ char32_t mons_char(monster_type mc)
         return monster_symbols[mc].glyph;
 }
 
-char mons_base_char(monster_type mc)
+char32_t mons_base_char(monster_type mc)
 {
     const monsterentry *me = get_monster_data(mc);
     return me ? me->basechar : 0;
@@ -1849,11 +1882,12 @@ static mon_attack_def _hepliaklqana_ancestor_attack(const monster &mon,
         return { };
 
     const int HD = mon.get_experience_level();
-    const int dam = HD + 3; // 4 at 1 HD, 21 at 18 HD (max)
-    // battlemages do double base melee damage (+25-50% including their weapon)
-    const int dam_mult = mon.type == MONS_ANCESTOR_BATTLEMAGE ? 2 : 1;
+    const int base_dam = HD + 3; // 4 at 1 HD, 21 at 18 HD (max)
+    // elementalists do reduced base melee damage
+    const int dam = mon.type == MONS_ANCESTOR_ELEMENTALIST ? base_dam * 2 / 3
+                                                           : base_dam;
 
-    return { AT_HIT, AF_PLAIN, dam * dam_mult };
+    return { AT_HIT, AF_PLAIN, dam };
 }
 
 /** Get the attack type, attack flavour and damage for a monster attack.
@@ -2141,8 +2175,10 @@ bool flavour_triggers_damageless(attack_flavour flavour)
         || flavour == AF_AIRSTRIKE
         || flavour == AF_SHADOWSTAB
         || flavour == AF_DROWN
+        || flavour == AF_CONTAM_WATER
         || flavour == AF_CORRODE
-        || flavour == AF_DIM;
+        || flavour == AF_DIM
+        || flavour == AF_BURSTSHROOM;
 }
 
 /**
@@ -4814,7 +4850,7 @@ int get_dist_to_nearest_monster()
         if (mon == nullptr)
             continue;
 
-        if (!mon->visible_to(&you))
+        if (!you.aware_of(*mon))
             continue;
 
         // Plants/fungi don't count.
@@ -4839,14 +4875,14 @@ bool monster_nearby()
     return false;
 }
 
-actor *actor_by_mid(mid_t m, bool require_valid)
+actor *actor_by_mid(mid_t m, bool require_valid, bool allow_dead)
 {
     if (m == MID_PLAYER)
         return &you;
-    return monster_by_mid(m, require_valid);
+    return monster_by_mid(m, require_valid, allow_dead);
 }
 
-monster *monster_by_mid(mid_t m, bool require_valid)
+monster *monster_by_mid(mid_t m, bool require_valid, bool allow_dead)
 {
     if (!require_valid)
     {
@@ -4857,20 +4893,15 @@ monster *monster_by_mid(mid_t m, bool require_valid)
     }
 
     if (unsigned short *mc = map_find(env.mid_cache, m))
-        return &env.mons[*mc];
+    {
+        monster* mon = &env.mons[*mc];
+        if (!allow_dead && invalid_monster(mon))
+            return nullptr;
+        return mon;
+    }
     return 0;
 }
 
-monster *cached_monster_copy_by_mid(mid_t m)
-{
-    for (size_t i = 0; i < env.final_effect_monster_cache.size(); ++i)
-    {
-        if (env.final_effect_monster_cache[i].mid == m)
-            return &env.final_effect_monster_cache[i];
-    }
-
-    return nullptr;
-}
 
 void init_anon()
 {
@@ -5377,8 +5408,11 @@ string get_damage_level_string(mon_holy_type holi, mon_dam_level_type mdam)
 
 void print_wounds(const monster& mons)
 {
-    if (!mons.alive() || mons.hit_points == mons.max_hit_points)
+    if (!mons.alive() || mons.hit_points == mons.max_hit_points
+        || mons.has_ench(ENCH_PHASE_SHIFT) && !you.can_see_invisible())
+    {
         return;
+    }
 
     mon_dam_level_type dam_level = mons_get_damage_level(mons);
     string desc = get_damage_level_string(mons.holiness(), dam_level);
@@ -5586,12 +5620,6 @@ void throw_monster_bits(const monster& mon)
     }
 }
 
-/// Add an ancestor spell to the given list.
-static void _add_ancestor_spell(monster_spells &spells, spell_type spell)
-{
-    spells.emplace_back(spell, 25, MON_SPELL_WIZARD);
-}
-
 /**
  * Set the correct spells for a given ancestor, corresponding to their HD and
  * type.
@@ -5611,26 +5639,49 @@ void set_ancestor_spells(monster &ancestor, bool notify)
     const int HD = ancestor.get_experience_level();
     switch (ancestor.type)
     {
-    case MONS_ANCESTOR_BATTLEMAGE:
-        _add_ancestor_spell(ancestor.spells, HD >= 10 ?
-                                             SPELL_BOLT_OF_MAGMA :
-                                             SPELL_THROW_FROST);
-        _add_ancestor_spell(ancestor.spells, HD >= 16 ?
-                                             SPELL_LEHUDIBS_CRYSTAL_SPEAR :
-                                             SPELL_STONE_ARROW);
+    case MONS_ANCESTOR_ELEMENTALIST:
+        ancestor.spells.emplace_back(SPELL_DEFLECT_MISSILES, 200, MON_SPELL_WIZARD);
+
+        if (HD < 10)
+            ancestor.spells.emplace_back(SPELL_SHOCK, 35, MON_SPELL_WIZARD);
+        if (HD < 13)
+            ancestor.spells.emplace_back(SPELL_STONE_ARROW, 35, MON_SPELL_WIZARD);
+        if (HD >= 10 && HD < 16)
+        {
+            ancestor.spells.emplace_back(SPELL_ICEBLAST, 35, MON_SPELL_WIZARD);
+            ancestor.spells.emplace_back(SPELL_BOLT_OF_MAGMA, 35, MON_SPELL_WIZARD);
+        }
+        if (HD >= 13)
+            ancestor.spells.emplace_back(SPELL_LRD, 40, MON_SPELL_WIZARD);
+        if (HD >= 16)
+            ancestor.spells.emplace_back(SPELL_PLASMA_BEAM, 30, MON_SPELL_WIZARD);
+        if (HD >= 16)
+            ancestor.spells.emplace_back(SPELL_PERMAFROST_ERUPTION, 30, MON_SPELL_WIZARD);
+
         break;
+
     case MONS_ANCESTOR_HEXER:
-        _add_ancestor_spell(ancestor.spells, HD >= 10 ? SPELL_PARALYSE
-                                                      : SPELL_SLOW);
-        _add_ancestor_spell(ancestor.spells, HD >= 13 ? SPELL_MASS_CONFUSION
-                                                      : SPELL_CONFUSE);
+        if (HD < 10)
+            ancestor.spells.emplace_back(SPELL_SLOW, 25, MON_SPELL_WIZARD);
+        if (HD < 13)
+            ancestor.spells.emplace_back(SPELL_CONFUSE, 25, MON_SPELL_WIZARD);
+        if (HD >= 10)
+            ancestor.spells.emplace_back(SPELL_PARALYSE, 25, MON_SPELL_WIZARD);
+        if (HD >= 13)
+        {
+            ancestor.spells.emplace_back(SPELL_HASTE, 25, MON_SPELL_WIZARD);
+            ancestor.spells.emplace_back(SPELL_MASS_CONFUSION, 25, MON_SPELL_WIZARD);
+        }
         break;
+
+    case MONS_ANCESTOR_KNIGHT:
+        if (HD >= 13)
+            ancestor.spells.emplace_back(SPELL_BOLSTER, 50, MON_SPELL_WIZARD);
+        break;
+
     default:
         break;
     }
-
-    if (HD >= 13)
-        ancestor.spells.emplace_back(SPELL_HASTE, 25, MON_SPELL_WIZARD);
 
     if (ancestor.spells.size())
         ancestor.props[CUSTOM_SPELLS_KEY] = true;
@@ -5870,5 +5921,34 @@ int mons_leash_range(monster_type mc)
         case MONS_PHALANX_BEETLE:   return 1;
         case MONS_HAUNTED_ARMOUR:   return 2;
         default:                    return 0; // No leashing
+    }
+}
+
+bool mons_is_rider(monster_type mc)
+{
+    return mc == MONS_SPRIGGAN_RIDER
+            || mc == MONS_GOBLIN_RIDER
+            || mc == MONS_GOJI;
+}
+
+monster_type mons_mount_type(monster_type mc)
+{
+    switch (mc)
+    {
+        case MONS_SPRIGGAN_RIDER:   return MONS_HORNET;
+        case MONS_GOBLIN_RIDER:     return MONS_WYVERN;
+        case MONS_GOJI:             return MONS_GHOST_MOTH;
+        default:                    return MONS_PROGRAM_BUG;
+    }
+}
+
+monster_type mons_rider_type(monster_type mc)
+{
+    switch (mc)
+    {
+        case MONS_SPRIGGAN_RIDER:   return MONS_SPRIGGAN;
+        case MONS_GOBLIN_RIDER:     return MONS_GOBLIN;
+        case MONS_GOJI:             return MONS_GOJI_UNMOUNTED;
+        default:                    return MONS_PROGRAM_BUG;
     }
 }

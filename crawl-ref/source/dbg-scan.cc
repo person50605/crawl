@@ -461,7 +461,7 @@ void debug_mons_scan()
             } // if (holder != m)
         } // for (int j = 0; j < NUM_MONSTER_SLOTS; j++)
 
-        monster* m1 = monster_by_mid(m->mid);
+        monster* m1 = monster_by_mid(m->mid, false, true);
         if (m1 != m)
         {
             if (!m1)
@@ -626,8 +626,6 @@ void check_map_validity()
             portal = DNGN_ENTER_HELL;
         else if (you.depth == 2)
             portal = DNGN_ENTER_PANDEMONIUM;
-        else if (you.depth == 3)
-            portal = DNGN_ENTER_ABYSS;
     }
 
     dungeon_feature_type exit = DNGN_UNSEEN;

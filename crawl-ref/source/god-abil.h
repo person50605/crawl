@@ -126,6 +126,8 @@ bool vehumet_supports_spell(spell_type spell);
 
 void trog_do_trogs_hand(int power);
 void trog_remove_trogs_hand();
+monster_type trog_get_brother_type(int power);
+spret trog_brothers_in_arms(bool fail);
 
 string yred_cannot_light_torch_reason();
 bool yred_light_the_torch();
@@ -231,7 +233,7 @@ spret uskayaw_grand_finale(bool fail);
 
 bool hepliaklqana_choose_ancestor_type(int ancestor_type);
 spret hepliaklqana_idealise(bool fail);
-spret hepliaklqana_transference(bool fail);
+spret hepliaklqana_transference(const coord_def& target, bool fail);
 void hepliaklqana_choose_identity();
 
 bool wu_jian_can_wall_jump_in_principle(const coord_def& target);

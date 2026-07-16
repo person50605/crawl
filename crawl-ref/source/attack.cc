@@ -130,8 +130,9 @@ bool attack::handle_phase_damaged()
     }
 
     // It's okay if a monster took lethal damage, but we should stop
-    // the combat if it was already reset (e.g. a spectral weapon that
-    // took damage and then noticed that its caster is gone).
+    // the combat if it is already cleaned up (e.g. a spectral weapon that
+    // took damage and then noticed that its caster is gone), to prevent
+    // messages referencing the monster after its disappearance.
     return defender->is_player() || !invalid_monster(defender->as_monster());
 }
 
@@ -307,7 +308,7 @@ int attack::calc_to_hit(bool random)
         mhit = maybe_random2(mhit + 1, random);
 
     dprf(DIAG_COMBAT, "%s: to-hit: %d",
-         attacker->name(DESC_PLAIN).c_str(), mhit);
+         attacker->name(DESC_PLAIN, true).c_str(), mhit);
 
     return mhit;
 }
@@ -458,7 +459,7 @@ void attack::alert_defender()
     }
 
     // If an enemy attacked a friend, set the pet target if it isn't set already.
-    if (perceived_attack && attacker->alive()
+    if (attacker->alive()
         && defender->friendly()
         && !attacker->is_player()
         && !crawl_state.game_is_arena()
@@ -468,6 +469,7 @@ void attack::alert_defender()
         {
             interrupt_activity(activity_interrupt::monster_attacks,
                                attacker->as_monster());
+            attacker->as_monster()->sense_if_invisible(false);
         }
         if (you.pet_target == MHITNOT)
             you.pet_target = attacker->mindex();
@@ -796,7 +798,7 @@ void attack::stab_message()
  */
 string attack::atk_name(description_level_type desc)
 {
-    return actor_name(attacker, desc, attacker_visible);
+    return actor_name(attacker, desc, attacker_visible || you.aware_of(*attacker));
 }
 
 /* Returns the defender's name
@@ -805,7 +807,7 @@ string attack::atk_name(description_level_type desc)
  */
 string attack::def_name(description_level_type desc)
 {
-    return actor_name(defender, desc, defender_visible);
+    return actor_name(defender, desc, defender_visible || you.aware_of(*defender));
 }
 
 /* TODO: Remove this!
@@ -862,7 +864,7 @@ int attack::player_apply_slaying_bonuses(int damage, bool aux)
     if (!aux && using_weapon())
         damage_plus = get_weapon_plus();
 
-    const bool throwing = !weapon && wpn_skill == SK_THROWING;
+    const bool throwing = wpn_skill == SK_THROWING;
     const bool ranged = throwing
                         || (weapon && is_range_weapon(*weapon)
                                    && using_weapon());
@@ -1116,7 +1118,7 @@ bool attack::attack_shield_blocked()
         pro_block /= 3;
 
     dprf(DIAG_COMBAT, "Defender: %s, Pro-block: %d, Con-block: %d",
-         def_name(DESC_PLAIN).c_str(), pro_block, con_block);
+         actor_name(defender, DESC_PLAIN, true).c_str(), pro_block, con_block);
 
     if (pro_block >= con_block && !defender->shield_exhausted()
         || defender->is_player() && you.duration[DUR_DIVINE_SHIELD])
@@ -1198,6 +1200,7 @@ bool attack::apply_damage_brand(const char *what)
         calc_elemental_brand_damage(BEAM_FIRE,
                                     defender->is_icy() ? "melt" : "burn",
                                     what);
+        special_damage_flavour = BEAM_FIRE;
         defender->expose_to_element(BEAM_FIRE, 2);
         if (defender->is_player())
             maybe_melt_player_enchantments(BEAM_FIRE, special_damage);
@@ -1205,6 +1208,7 @@ bool attack::apply_damage_brand(const char *what)
 
     case SPWPN_FREEZING:
         calc_elemental_brand_damage(BEAM_COLD, "freeze", what);
+        special_damage_flavour = BEAM_COLD;
         defender->expose_to_element(BEAM_COLD, 2, attacker);
         break;
 
@@ -1217,6 +1221,7 @@ bool attack::apply_damage_brand(const char *what)
 
         if (special_damage && defender_visible)
         {
+            special_damage_flavour = BEAM_HOLY;
             special_damage_message =
                 make_stringf(
                     "%s %s%s",
@@ -1239,6 +1244,7 @@ bool attack::apply_damage_brand(const char *what)
 
         if (defender_visible && special_damage)
         {
+            special_damage_flavour = BEAM_FOUL_FLAME;
             special_damage_message =
                 make_stringf(
                     "%s %s%s",
@@ -1270,10 +1276,12 @@ bool attack::apply_damage_brand(const char *what)
         break;
 
     case SPWPN_VENOM:
+        special_damage_flavour = BEAM_POISON;
         obvious_effect = apply_poison_damage_brand();
         break;
 
     case SPWPN_DRAINING:
+        special_damage_flavour = BEAM_NEG;
         drain_defender();
         break;
 
@@ -1293,6 +1301,7 @@ bool attack::apply_damage_brand(const char *what)
         int hp_boost = is_unrandom_artefact(*weapon, UNRAND_VAMPIRES_TOOTH)
                        ? damage_done : 1 + random2(damage_done);
         hp_boost = resist_adjust_damage(defender, BEAM_NEG, hp_boost);
+        special_damage_flavour = BEAM_VAMPIRIC_DRAINING;
 
         if (hp_boost)
         {
@@ -1327,6 +1336,7 @@ bool attack::apply_damage_brand(const char *what)
             break;
         }
 
+        special_damage_flavour = BEAM_PAIN;
         pain_affects_defender();
         break;
 
@@ -1395,6 +1405,7 @@ bool attack::apply_damage_brand(const char *what)
     }
 
     case SPWPN_CHAOS:
+        special_damage_flavour = BEAM_CHAOS;
         obvious_effect = chaos_affects_actor(defender, attacker);
         break;
 
@@ -1403,6 +1414,7 @@ bool attack::apply_damage_brand(const char *what)
         break;
 
     case SPWPN_ACID:
+        special_damage_flavour = BEAM_ACID;
         defender->splash_with_acid(attacker);
         break;
 
@@ -1416,21 +1428,8 @@ bool attack::apply_damage_brand(const char *what)
         break;
 
     default:
-        if (using_weapon() && is_unrandom_artefact(*weapon, UNRAND_DAMNATION))
-            attacker->god_conduct(DID_EVIL, 2 + random2(3));
         break;
     }
-
-    if (damage_brand == SPWPN_CHAOS)
-    {
-        if (responsible->is_player())
-            did_god_conduct(DID_CHAOS, 2 + random2(3));
-    }
-
-    // Since this adds the reaping brand to all attacks, check it after all
-    // other brands.
-    if (attacker->is_player() && you.unrand_equipped(UNRAND_SKULL_OF_ZONGULDROK))
-        did_god_conduct(DID_EVIL, 2 + random2(3));
 
     if (!obvious_effect)
         obvious_effect = !special_damage_message.empty();

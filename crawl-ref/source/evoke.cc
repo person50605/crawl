@@ -87,7 +87,6 @@ static bool _evoke_horn_of_geryon()
 
     mprf(MSGCH_SOUND, "You produce a hideous howling noise!");
     noisy(15, you.pos()); // same as hell effect noise
-    did_god_conduct(DID_EVIL, 3);
     int num = 1;
     const int adjusted_power = you.skill(SK_EVOCATIONS, 10);
     if (adjusted_power + random2(90) > 130)
@@ -294,7 +293,6 @@ static bool _box_of_beasts()
 
     mprf("...and %s %s out!",
          mons->name(DESC_A).c_str(), mons->airborne() ? "flies" : "leaps");
-    did_god_conduct(DID_CHAOS, random_range(5,10));
 
     return true;
 }
@@ -614,6 +612,14 @@ static bool _phial_of_floods(dist *target)
     return false;
 }
 
+bool mirror_can_effect(monster *victim)
+{
+    // Mirrored monsters (including by Mara, rakshasas) can still be
+    // re-reflected.
+    return actor_is_illusion_cloneable(victim)
+        || victim->has_ench(ENCH_PHANTOM_MIRROR);
+}
+
 static spret _phantom_mirror(dist *target)
 {
     bolt beam;
@@ -622,7 +628,7 @@ static spret _phantom_mirror(dist *target)
     if (!target)
         target = &target_local;
 
-    targeter_smite tgt(&you, LOS_RADIUS);
+    targeter_phantom_mirror tgt(&you);
 
     direction_chooser_args args;
     args.restricts = DIR_TARGET;
@@ -633,23 +639,6 @@ static spret _phantom_mirror(dist *target)
     if (!spell_direction(*target, beam, &args))
         return spret::abort;
     victim = monster_at(beam.target);
-    if (!victim || !you.can_see(*victim))
-    {
-        if (beam.target == you.pos())
-            mpr("You can't use the mirror on yourself.");
-        else
-            mpr("You can't see anything there to clone.");
-        return spret::abort;
-    }
-
-    // Mirrored monsters (including by Mara, rakshasas) can still be
-    // re-reflected.
-    if (!actor_is_illusion_cloneable(victim)
-        && !victim->has_ench(ENCH_PHANTOM_MIRROR))
-    {
-        mpr("The mirror can't reflect that.");
-        return spret::abort;
-    }
 
     monster_info mi(victim);
     habitat_type habitat = mons_habitat(*victim);
@@ -982,8 +971,11 @@ static bool _evoke_ally_only(const item_def &item, bool ident)
     return false;
 }
 
-string cannot_evoke_item_reason(const item_def *item, bool temp, bool ident)
+string cannot_evoke_item_reason(const item_def *item, bool temp, bool ident,
+                                bool *god_forbids)
 {
+    if (god_forbids)
+        *god_forbids = false;
     // id is not at issue here
     if (temp && you.berserk())
         return "You are too berserk!";
@@ -1002,6 +994,15 @@ string cannot_evoke_item_reason(const item_def *item, bool temp, bool ident)
         // TODO: zigfig has some terrain/level constraints that aren't handled
         // here
         return "";
+    }
+
+    // Your god won't let you evoke items they forbid.
+    if (god_forbids_item(*item, temp))
+    {
+        if (god_forbids)
+            *god_forbids = true;
+        return make_stringf("%s forbids the use of this item.",
+                            uppercase_first(god_name(you.religion)).c_str());
     }
 
     if (item->is_type(OBJ_BAUBLES, BAUBLE_FLUX))
@@ -1060,9 +1061,10 @@ string cannot_evoke_item_reason(const item_def *item, bool temp, bool ident)
 
 bool item_currently_evokable(const item_def *item)
 {
-    const string err = cannot_evoke_item_reason(item);
+    bool god_forbids = false;
+    const string err = cannot_evoke_item_reason(item, true, true, &god_forbids);
     if (!err.empty())
-        mpr(err);
+        mprf(god_forbids ? MSGCH_GOD : MSGCH_PLAIN, "%s", err.c_str());
     return err.empty();
 }
 

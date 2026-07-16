@@ -14,11 +14,12 @@
 #include "object-selector-type.h"
 #include "operation-types.h"
 #include "player-equip.h"
+#include "spl-cast.h" // spret
 #include "unwind.h"
 
 const int ARMOUR_EQUIP_DELAY = 5;
 
-operation_types use_an_item_menu(item_def *&target, operation_types oper,
+spret use_an_item_menu(item_def *&target, operation_types oper,
                 int item_type=OSEL_ANY,
                 const char* prompt=nullptr,
                 function<bool ()> allowcancel = [](){ return true; });
@@ -28,11 +29,15 @@ bool oni_drunken_swing();
 bool drink(item_def* potion = nullptr);
 bool invisibility_target_check(const char* prompt);
 
-bool god_hates_brand(const int brand);
+bool god_hates_brand(const brand_type brand);
 
 bool scroll_hostile_check(scroll_type which_scroll);
 bool scroll_has_targeter(scroll_type which_scroll);
 bool read(item_def* scroll = nullptr, dist *target=nullptr);
+void handle_post_scroll_effects(item_def* scroll, spret read_result,
+                                coord_def original_pos, bool nearby_mons,
+                                bool alreadyknown, bool dangerous,
+                                bool bad_effect);
 
 bool auto_wield();
 
@@ -62,7 +67,8 @@ bool warn_about_changing_gear(const vector<item_def*>& to_remove,
 void do_equipment_change(item_def* to_equip, equipment_slot equip_slot,
                          vector<item_def*> to_remove);
 
-string cannot_put_on_talisman_reason(const item_def& talisman, bool temp = true);
+string cannot_put_on_talisman_reason(const item_def& talisman, bool temp = true,
+                                     bool* god_forbids = nullptr);
 bool use_talisman(item_def& talisman);
 
 bool uncancel_brand_weapon();

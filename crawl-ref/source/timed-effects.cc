@@ -28,6 +28,7 @@
 #include "god-passive.h"
 #include "items.h"
 #include "libutil.h"
+#include "map-knowledge.h"
 #include "mapmark.h"
 #include "message.h"
 #include "mgen-data.h"
@@ -562,7 +563,8 @@ void monster::timeout_enchantments(int time, bool no_drowning)
         case ENCH_INNER_FLAME:
         case ENCH_ROLLING: case ENCH_MERFOLK_AVATAR_SONG: case ENCH_INFESTATION:
         case ENCH_HELD: case ENCH_BULLSEYE_TARGET: case ENCH_FATIGUE:
-        case ENCH_TIDE: case ENCH_SLOWLY_DYING:
+        case ENCH_TIDE: case ENCH_SLOWLY_DYING: case ENCH_BRAMBLE_COOLDOWN:
+        case ENCH_EXPOSED:
             _timeout_enchantment(*this, entry.second, time);
             break;
 
@@ -597,6 +599,10 @@ void monster::timeout_enchantments(int time, bool no_drowning)
         case ENCH_CONFUSION:
             if (!mons_class_flag(type, M_CONFUSED))
                 _timeout_enchantment(*this, entry.second, time);
+            break;
+
+        case ENCH_PREPARING_TO_LURK:
+            del_ench(ENCH_PREPARING_TO_LURK, true, false);
             break;
 
         default:
@@ -982,18 +988,18 @@ void timeout_terrain_changes(int duration, bool force)
     });
 
     for (const auto &m_pos : revert)
-    {
         revert_terrain_change(m_pos.pos, m_pos.type);
 
+    for (const auto& m_pos : revert)
+    {
         // When multiple tiles are reverting at once, walls reappearing may
         // obscure otherwise-unambiguous information about terrain behind them,
         // so forcibly redraw anything the player could see at the start of them.
         if (m_pos.was_in_los)
         {
-            env.map_knowledge(m_pos.pos).set_feature(env.grid(m_pos.pos));
-#ifdef USE_TILE
-            tile_env.bk_bg(m_pos.pos) = tileidx_feature_base(env.grid(m_pos.pos));
-#endif
+            update_terrain_knowledge(m_pos.pos);
+            update_grid_colour_knowledge(m_pos.pos);
+            redraw_view_at(m_pos.pos);
         }
     }
 
@@ -1013,10 +1019,24 @@ void timeout_terrain_changes(int duration, bool force)
 //
 
 static vector<coord_def> sfx_seeds;
+static vector<coord_def> mould_patches;
+
+void update_mould_tracking(const coord_def& pos)
+{
+    if (env.grid(pos) == DNGN_MOULD_PATCH)
+        mould_patches.push_back(pos);
+    else
+    {
+        auto p = std::find(mould_patches.begin(), mould_patches.end(), pos);
+        if (p != mould_patches.end())
+            mould_patches.erase(p);
+    }
+}
 
 void setup_environment_effects()
 {
     sfx_seeds.clear();
+    mould_patches.clear();
 
     for (int x = X_BOUND_1; x <= X_BOUND_2; ++x)
     {
@@ -1033,6 +1053,8 @@ void setup_environment_effects()
                 const coord_def c(x, y);
                 sfx_seeds.push_back(c);
             }
+            else if (grid == DNGN_MOULD_PATCH)
+                mould_patches.push_back({x, y});
         }
     }
     dprf("%u environment effect seeds", (unsigned int)sfx_seeds.size());
@@ -1085,6 +1107,19 @@ void run_environment_effects()
         }
     }
 
+    // If any mould patches have become unoccupied, schedule a new fungus spawning.
+    for (const coord_def& pos : mould_patches)
+    {
+        if (env.grid(pos) != DNGN_MOULD_PATCH)
+            continue;
+
+        if (!actor_at(pos) && !env.markers.get_active_feature_at(pos, DNGN_MOULD_PATCH))
+        {
+            env.markers.add(new map_active_feature_marker(pos, DNGN_MOULD_PATCH, MID_NOBODY,
+                                                          ATT_HOSTILE, 0, random_range(60, 180)));
+        }
+    }
+
     env.markers.run_all(you.time_taken);
 
     shoals_apply_tides(div_rand_round(you.time_taken, BASELINE_DELAY),
@@ -1125,6 +1160,7 @@ bool map_active_feature_marker::run(int time)
     switch (feat)
     {
         case DNGN_SPIKE_LAUNCHER:   return run_spike_launcher(time);
+        case DNGN_MOULD_PATCH:      return run_mould_patch(time);
         default:                    return true;
     }
 }
@@ -1228,6 +1264,21 @@ bool map_active_feature_marker::run_spike_launcher(int time)
             mprf("%s spike launcher falls apart.", act->name(DESC_ITS).c_str());
         revert_terrain_change(pos, TERRAIN_CHANGE_SPIKE_LAUNCHER);
         return true;
+    }
+
+    return false;
+}
+
+bool map_active_feature_marker::run_mould_patch(int time)
+{
+    if (duration > 0)
+        duration -= time;
+
+    if (duration <= 0 && !actor_at(pos))
+    {
+        mgen_data mg(MONS_FUNGUS, BEH_HOSTILE, pos, MHITNOT, MG_FORCE_PLACE);
+        if (create_monster(mg))
+            return true;
     }
 
     return false;

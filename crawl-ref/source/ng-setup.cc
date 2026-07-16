@@ -19,6 +19,7 @@
 #include "ng-init.h"
 #include "ng-wanderer.h"
 #include "options.h"
+#include "piety-info.h"
 #include "prompt.h"
 #include "religion.h"
 #include "shopping.h"
@@ -31,6 +32,7 @@
 #include "tag-version.h"
 #include "throw.h"
 #include "transform.h"
+#include "unwind.h"
 
 #define MIN_START_STAT       3
 
@@ -455,6 +457,9 @@ static void _setup_innate_spells()
         if (sp != SPELL_NO_SPELL)
             spellset.insert(sp);
 
+    // Ignore divine prohibitions on spells for zealot classes.
+    unwind_var<god_type> no_god(you.religion, GOD_NO_GOD);
+
     // Get spells at XL 3 and every odd level thereafter.
     vector<spell_type> chosen_spells;
     int const min_lev[] = {1,2, 2,3,4, 5,6,6, 6,7,7, 8,9};
@@ -623,10 +628,11 @@ static void _setup_generic(const newgame_def& ng,
 
     reassess_starting_skills(false);
     init_skill_order();
-    init_can_currently_train();
     init_train();
     if (you.religion == GOD_TROG)
         join_trog_skills();
+    if (you.religion != GOD_NO_GOD)
+        you.piety_info.register_join();
     init_training();
     if (you.has_mutation(MUT_INNATE_CASTER))
         cleanup_innate_magic_skills();
